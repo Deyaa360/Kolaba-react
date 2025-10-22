@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert
 } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Colors, Typography, Spacing, BorderRadius, Shadow } from '../theme';
 import supabaseService from '../services/supabase';
 
@@ -113,75 +114,96 @@ const ProfileScreen = () => {
         <View style={styles.avatarContainer}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>
-              {userProfile?.full_name?.charAt(0).toUpperCase() || 'U'}
+              {userProfile?.full_name?.charAt(0).toUpperCase() || userProfile?.email?.charAt(0).toUpperCase() || 'U'}
             </Text>
           </View>
         </View>
-        <Text style={styles.name}>{userProfile?.full_name || 'User'}</Text>
+        <Text style={styles.name}>{userProfile?.full_name || 'Creator'}</Text>
         <Text style={styles.email}>{userProfile?.email}</Text>
-        <View style={styles.typeBadge}>
-          <Text style={styles.typeText}>{userProfile?.user_type || 'creator'}</Text>
-        </View>
       </View>
 
-      {/* Stats */}
-      <View style={styles.statsContainer}>
-        <View style={styles.statItem}>
+      {/* Quick Stats Cards */}
+      <View style={styles.statsGrid}>
+        <View style={styles.statCard}>
+          <View style={styles.statIconBg}>
+            <Icon name="send" size={22} color="#6366F1" />
+          </View>
           <Text style={styles.statValue}>{stats.applications}</Text>
           <Text style={styles.statLabel}>Applications</Text>
         </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
+        <View style={styles.statCard}>
+          <View style={[styles.statIconBg, { backgroundColor: '#ECFDF5' }]}>
+            <Icon name="check-circle" size={22} color="#10B981" />
+          </View>
           <Text style={styles.statValue}>{stats.completed}</Text>
           <Text style={styles.statLabel}>Completed</Text>
         </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>${stats.earnings}</Text>
-          <Text style={styles.statLabel}>Earned</Text>
-        </View>
       </View>
+
+      {/* Earnings Banner */}
+      {stats.earnings > 0 && (
+        <View style={styles.earningsCard}>
+          <View style={styles.earningsContent}>
+            <View style={styles.earningsIconWrapper}>
+              <Icon name="payments" size={28} color="#059669" />
+            </View>
+            <View style={styles.earningsInfo}>
+              <Text style={styles.earningsLabel}>Total Earnings</Text>
+              <Text style={styles.earningsValue}>${stats.earnings.toFixed(2)}</Text>
+            </View>
+          </View>
+          <Icon name="arrow-forward" size={24} color="#6B7280" />
+        </View>
+      )}
 
       {/* Bio Section */}
       {creatorProfile?.bio && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About</Text>
+        <View style={styles.bioSection}>
+          <Text style={styles.bioTitle}>About Me</Text>
           <Text style={styles.bioText}>{creatorProfile.bio}</Text>
         </View>
       )}
 
       {/* Menu Items */}
-      <View style={styles.section}>
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuIcon}>✏️</Text>
+      <View style={styles.menuSection}>
+        <TouchableOpacity style={styles.menuItem} activeOpacity={0.7}>
+          <View style={styles.menuIconContainer}>
+            <Icon name="edit" size={20} color="#6366F1" />
+          </View>
           <Text style={styles.menuText}>Edit Profile</Text>
-          <Text style={styles.menuArrow}>›</Text>
+          <Icon name="chevron-right" size={24} color="#9CA3AF" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuIcon}>📊</Text>
+        <TouchableOpacity style={styles.menuItem} activeOpacity={0.7}>
+          <View style={styles.menuIconContainer}>
+            <Icon name="assignment" size={20} color="#6366F1" />
+          </View>
           <Text style={styles.menuText}>My Applications</Text>
-          <Text style={styles.menuArrow}>›</Text>
+          <Icon name="chevron-right" size={24} color="#9CA3AF" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuIcon}>⚙️</Text>
+        <TouchableOpacity style={styles.menuItem} activeOpacity={0.7}>
+          <View style={styles.menuIconContainer}>
+            <Icon name="settings" size={20} color="#6366F1" />
+          </View>
           <Text style={styles.menuText}>Settings</Text>
-          <Text style={styles.menuArrow}>›</Text>
+          <Icon name="chevron-right" size={24} color="#9CA3AF" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuIcon}>ℹ️</Text>
+        <TouchableOpacity style={styles.menuItem} activeOpacity={0.7}>
+          <View style={styles.menuIconContainer}>
+            <Icon name="help-outline" size={20} color="#6366F1" />
+          </View>
           <Text style={styles.menuText}>Help & Support</Text>
-          <Text style={styles.menuArrow}>›</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={[styles.menuItem, styles.menuItemDanger]} onPress={handleLogout}>
-          <Text style={styles.menuIcon}>🚪</Text>
-          <Text style={[styles.menuText, styles.menuTextDanger]}>Logout</Text>
-          <Text style={styles.menuArrow}>›</Text>
+          <Icon name="chevron-right" size={24} color="#9CA3AF" />
         </TouchableOpacity>
       </View>
+
+      {/* Logout Button */}
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.8}>
+        <Icon name="logout" size={20} color="#EF4444" />
+        <Text style={styles.logoutText}>Logout</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -192,7 +214,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9FAFB',
   },
   contentContainer: {
-    paddingBottom: Spacing.xl,
+    paddingBottom: Spacing.xl * 2,
   },
   loadingContainer: {
     flex: 1,
@@ -203,86 +225,123 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     padding: Spacing.xl,
-    paddingTop: 32,
+    paddingTop: 40,
+    paddingBottom: Spacing.xl,
     backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
   },
   avatarContainer: {
     marginBottom: Spacing.md,
   },
   avatar: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
     backgroundColor: '#6366F1',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 4,
-    borderColor: '#EEF2FF',
   },
   avatarText: {
-    fontSize: 36,
+    fontSize: 40,
     fontWeight: '800',
     color: '#FFFFFF',
   },
   name: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: 22,
+    fontWeight: '800',
     color: '#111827',
     marginBottom: 4,
+    letterSpacing: -0.5,
   },
   email: {
     fontSize: 14,
     color: '#6B7280',
-    marginBottom: Spacing.md,
+    fontWeight: '500',
   },
-  typeBadge: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: '#EEF2FF',
-  },
-  typeText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#6366F1',
-    textTransform: 'capitalize',
-  },
-  statsContainer: {
+  statsGrid: {
     flexDirection: 'row',
+    gap: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+  },
+  statCard: {
+    flex: 1,
     backgroundColor: '#FFFFFF',
-    marginHorizontal: Spacing.lg,
-    marginTop: Spacing.lg,
-    padding: 20,
+    padding: Spacing.lg,
     borderRadius: 16,
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
-  statItem: {
-    flex: 1,
+  statIconBg: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: '#EEF2FF',
+    justifyContent: 'center',
     alignItems: 'center',
-  },
-  statDivider: {
-    width: 1,
-    backgroundColor: '#E5E7EB',
-    marginHorizontal: 12,
+    marginBottom: Spacing.sm,
   },
   statValue: {
     fontSize: 28,
     fontWeight: '800',
     color: '#111827',
+    letterSpacing: -0.8,
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
     color: '#6B7280',
-    fontWeight: '500',
+    fontWeight: '600',
   },
-  section: {
+  earningsCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
     marginHorizontal: Spacing.lg,
-    marginTop: Spacing.lg,
+    marginTop: Spacing.md,
+    padding: Spacing.lg,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
-  sectionTitle: {
-    fontSize: 18,
+  earningsContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  earningsIconWrapper: {
+    width: 56,
+    height: 56,
+    borderRadius: 14,
+    backgroundColor: '#ECFDF5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Spacing.md,
+  },
+  earningsInfo: {
+    flex: 1,
+  },
+  earningsLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#6B7280',
+    marginBottom: 4,
+  },
+  earningsValue: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#059669',
+    letterSpacing: -0.8,
+  },
+  bioSection: {
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.xl,
+  },
+  bioTitle: {
+    fontSize: 16,
     fontWeight: '700',
     color: '#111827',
     marginBottom: Spacing.md,
@@ -290,30 +349,35 @@ const styles = StyleSheet.create({
   bioText: {
     fontSize: 14,
     color: '#4B5563',
-    lineHeight: 20,
+    lineHeight: 22,
     backgroundColor: '#FFFFFF',
-    padding: Spacing.md,
+    padding: Spacing.lg,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: '#E5E7EB',
+  },
+  menuSection: {
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.xl,
+    gap: 8,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    padding: 16,
+    padding: Spacing.lg,
     borderRadius: 14,
-    marginBottom: 8,
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
-  menuItemDanger: {
-    borderColor: '#FEE2E2',
-    backgroundColor: '#FEF2F2',
-  },
-  menuIcon: {
-    fontSize: 20,
-    marginRight: 14,
+  menuIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: '#EEF2FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Spacing.md,
   },
   menuText: {
     flex: 1,
@@ -321,12 +385,23 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#111827',
   },
-  menuTextDanger: {
-    color: '#EF4444',
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.lg,
+    padding: Spacing.lg,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
+    gap: Spacing.sm,
   },
-  menuArrow: {
-    fontSize: 20,
-    color: '#9CA3AF',
+  logoutText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#EF4444',
   },
 });
 
