@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import supabaseService from '../services/supabase';
-import { Colors, Typography, Spacing, BorderRadius, Shadow } from '../theme';
+import { Colors, Typography, Spacing, BorderRadius } from '../theme';
 
 const ProductDetailsScreen = ({ route, navigation }: any) => {
   const { productId } = route.params;
@@ -134,21 +134,20 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
             <Icon name="lightbulb-outline" size={20} color={Colors.primary} />
             <Text style={styles.sectionTitle}>How to Use</Text>
           </View>
-          <View style={styles.howToUseBox}>
-            <Text style={styles.howToUseText}>{product.how_to_use}</Text>
-          </View>
+          <Text style={styles.descriptionText}>{product.how_to_use}</Text>
         </View>
       )}
 
       {/* Product Website Button */}
       {product.website && (
-        <View style={styles.buttonContainer}>
+        <View style={styles.section}>
           <TouchableOpacity
             style={styles.websiteButton}
             onPress={openProductWebsite}
           >
-            <Text style={styles.websiteButtonText}>View Product Website</Text>
-            <Icon name="open-in-new" size={20} color="#FFFFFF" />
+            <Icon name="language" size={20} color={Colors.primary} />
+            <Text style={styles.websiteButtonText}>Visit Product Website</Text>
+            <Icon name="arrow-forward" size={20} color={Colors.primary} />
           </TouchableOpacity>
         </View>
       )}
@@ -247,7 +246,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     padding: Spacing.xl,
     marginTop: Spacing.md,
-    ...Shadow.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.lg,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -265,58 +266,21 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     lineHeight: 24,
   },
-  howToUseBox: {
-    backgroundColor: Colors.primaryLight,
-    padding: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    borderLeftWidth: 4,
-    borderLeftColor: Colors.primary,
-  },
-  howToUseText: {
-    fontSize: Typography.fontSize.base,
-    color: Colors.text,
-    lineHeight: 24,
-  },
-  infoSection: {
-    backgroundColor: Colors.white,
-    padding: Spacing.xl,
-    marginTop: Spacing.md,
-    ...Shadow.sm,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Spacing.sm,
-  },
-  infoLabel: {
-    fontSize: Typography.fontSize.base,
-    fontWeight: Typography.fontWeight.semibold,
-    color: Colors.textSecondary,
-    width: 100,
-  },
-  infoValue: {
-    flex: 1,
-    fontSize: Typography.fontSize.base,
-    color: Colors.text,
-  },
-  buttonContainer: {
-    paddingHorizontal: Spacing.xl,
-    marginTop: Spacing.xl,
-  },
   websiteButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.primary,
-    paddingVertical: Spacing.lg,
+    backgroundColor: Colors.white,
+    paddingVertical: Spacing.md,
     borderRadius: BorderRadius.lg,
+    borderWidth: 2,
+    borderColor: Colors.primary,
     gap: Spacing.sm,
-    ...Shadow.md,
   },
   websiteButtonText: {
-    fontSize: Typography.fontSize.lg,
+    fontSize: Typography.fontSize.base,
     fontWeight: Typography.fontWeight.semibold,
-    color: '#FFFFFF',
+    color: Colors.primary,
   },
 });
 

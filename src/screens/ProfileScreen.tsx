@@ -9,7 +9,7 @@ import {
   Alert
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { Colors, Typography, Spacing, BorderRadius, Shadow } from '../theme';
+import { Colors, Typography, Spacing, BorderRadius } from '../theme';
 import supabaseService from '../services/supabase';
 
 interface UserProfile {

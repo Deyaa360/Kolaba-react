@@ -15,7 +15,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import supabaseService from '../services/supabase';
-import { Colors, Typography, Spacing, BorderRadius, Shadow } from '../theme';
+import { Colors, Typography, Spacing, BorderRadius } from '../theme';
 import FilterModal from '../components/FilterModal';
 import DetailChip from '../components/DetailChip';
 

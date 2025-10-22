@@ -15,7 +15,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import RenderHtml from 'react-native-render-html';
 import { useWindowDimensions } from 'react-native';
 import supabaseService from '../services/supabase';
-import { Colors, Typography, Spacing, BorderRadius, Shadow } from '../theme';
+import { Colors, Typography, Spacing, BorderRadius } from '../theme';
 import { DetailChip } from '../components';
 
 const CampaignDetailsScreen = ({ route, navigation }: any) => {
@@ -869,7 +869,6 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
     borderWidth: 1,
     borderColor: Colors.border,
-    ...Shadow.sm,
   },
   productImageSmall: {
     width: 60,
@@ -899,7 +898,8 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
     padding: Spacing.md,
     borderRadius: BorderRadius.lg,
-    ...Shadow.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   productHeader: {
     flexDirection: 'row',
