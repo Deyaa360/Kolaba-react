@@ -280,38 +280,8 @@ const CampaignsScreen: React.FC = () => {
 
         {/* Footer */}
         <View style={styles.cardFooter}>
-          <View style={styles.socialRow}>
-            {brand?.instagram_handle && (
-              <TouchableOpacity 
-                style={styles.socialBadge}
-                onPress={() => {
-                  // You can add Linking.openURL here to open Instagram
-                  console.log('Open Instagram:', brand.instagram_handle);
-                }}
-                activeOpacity={0.7}
-              >
-                <Icon name="camera-alt" size={12} color="#E1306C" />
-                <Text style={styles.socialBadgeText}>@{brand.instagram_handle}</Text>
-              </TouchableOpacity>
-            )}
-            {brand?.tiktok_handle && (
-              <TouchableOpacity 
-                style={styles.socialBadge}
-                onPress={() => {
-                  // You can add Linking.openURL here to open TikTok
-                  console.log('Open TikTok:', brand.tiktok_handle);
-                }}
-                activeOpacity={0.7}
-              >
-                <Icon name="music-note" size={12} color="#000000" />
-                <Text style={styles.socialBadgeText}>@{brand.tiktok_handle}</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-          <View style={styles.viewDetailsButton}>
-            <Text style={styles.viewDetailsText}>View Details</Text>
-            <Icon name="arrow-forward" size={14} color="#6366F1" />
-          </View>
+          <Text style={styles.viewDetailsText}>View Details</Text>
+          <Icon name="arrow-forward" size={16} color="#6366F1" />
         </View>
       </TouchableOpacity>
     );
@@ -792,39 +762,13 @@ const styles = StyleSheet.create({
   cardFooter: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: '#F9FAFB',
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
-  },
-  socialRow: {
-    flexDirection: 'row',
-    gap: 8,
-    flex: 1,
-    flexWrap: 'wrap',
-  },
-  socialBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F9FAFB',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    gap: 4,
-  },
-  socialBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#374151',
-  },
-  viewDetailsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
   viewDetailsText: {
     fontSize: 14,

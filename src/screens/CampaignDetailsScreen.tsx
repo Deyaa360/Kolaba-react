@@ -292,7 +292,7 @@ const CampaignDetailsScreen = ({ route, navigation }: any) => {
                   onError={() => console.log('Failed to load brand logo')}
                 />
               ) : (
-                <Icon name="business" size={20} color={Colors.primary} />
+                <Icon name="business" size={24} color={Colors.primary} />
               )}
             </View>
             <View style={styles.brandTextInfo}>
@@ -361,15 +361,14 @@ const CampaignDetailsScreen = ({ route, navigation }: any) => {
               const quantity = pkg.quantity_needed || 1;
 
               return (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.packageCard}
-                  onPress={() => togglePackage(index)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.packageHeader}>
+                <View key={index} style={styles.packageItem}>
+                  <TouchableOpacity
+                    style={styles.packageHeaderButton}
+                    onPress={() => togglePackage(index)}
+                    activeOpacity={0.7}
+                  >
                     <View style={[styles.packageIconContainer, { backgroundColor: packageColor + '20' }]}>
-                      <Icon name={packageIcon} size={20} color={packageColor} />
+                      <Icon name={packageIcon} size={22} color={packageColor} />
                     </View>
                     <View style={styles.packageTitleContainer}>
                       <Text style={styles.packageTitle}>
@@ -381,13 +380,13 @@ const CampaignDetailsScreen = ({ route, navigation }: any) => {
                     </View>
                     <Icon 
                       name={isExpanded ? 'expand-less' : 'expand-more'} 
-                      size={24} 
+                      size={28} 
                       color={Colors.textSecondary} 
                     />
-                  </View>
+                  </TouchableOpacity>
 
                   {isExpanded && (
-                    <View style={styles.packageDetails}>
+                    <View style={styles.packageExpandedContent}>
                       <View style={styles.divider} />
                       
                       {/* Content Type Badge */}
@@ -542,7 +541,7 @@ const CampaignDetailsScreen = ({ route, navigation }: any) => {
                       )}
                     </View>
                   )}
-                </TouchableOpacity>
+                </View>
               );
             })}
           </View>
@@ -674,16 +673,16 @@ const styles = StyleSheet.create({
   },
   heroSection: {
     backgroundColor: Colors.white,
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    padding: Spacing.xl,
+    paddingBottom: Spacing.lg,
   },
   campaignTitle: {
-    fontSize: Typography.fontSize['2xl'],
-    fontWeight: '700',
-    color: Colors.text,
-    marginBottom: Spacing.md,
-    lineHeight: 32,
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#111827',
+    marginBottom: Spacing.lg,
+    lineHeight: 30,
+    letterSpacing: -0.5,
   },
   brandInfoRow: {
     flexDirection: 'row',
@@ -691,13 +690,15 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   brandLogoSmall: {
-    width: 40,
-    height: 40,
-    borderRadius: BorderRadius.md,
-    backgroundColor: Colors.primaryLight,
+    width: 52,
+    height: 52,
+    borderRadius: 13,
+    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   brandLogoImage: {
     width: '100%',
@@ -708,14 +709,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   brandName: {
-    fontSize: Typography.fontSize.base,
-    fontWeight: '600',
-    color: Colors.text,
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 4,
   },
   brandWebsite: {
-    fontSize: Typography.fontSize.sm,
+    fontSize: 13,
     color: Colors.primary,
-    marginTop: 2,
+    fontWeight: '500',
   },
   badgesRow: {
     flexDirection: 'row',
@@ -723,41 +725,44 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   section: {
-    marginTop: Spacing.lg,
+    marginTop: Spacing.sm,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.lg,
+    backgroundColor: '#FAFBFC',
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#E5E7EB',
   },
   sectionTitle: {
-    fontSize: Typography.fontSize.lg,
+    fontSize: 15,
     fontWeight: '700',
-    color: Colors.text,
+    color: '#111827',
     marginLeft: Spacing.sm,
+    letterSpacing: -0.3,
   },
   sectionContent: {
     backgroundColor: Colors.white,
-    padding: Spacing.lg,
+    padding: Spacing.xl,
   },
-  packageCard: {
+  packageItem: {
     backgroundColor: Colors.white,
-    marginHorizontal: Spacing.md,
-    marginBottom: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
-  packageHeader: {
+  packageHeaderButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: Spacing.lg,
+    padding: Spacing.xl,
+    paddingVertical: Spacing.lg,
   },
   packageIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: BorderRadius.md,
+    width: 48,
+    height: 48,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -766,25 +771,30 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.md,
   },
   packageTitle: {
-    fontSize: Typography.fontSize.base,
-    fontWeight: '600',
-    color: Colors.text,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 4,
   },
   packageSubtitle: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.textSecondary,
-    marginTop: 2,
+    fontSize: 13,
+    color: '#6B7280',
+    fontWeight: '600',
+  },
+  packageExpandedContent: {
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.xl,
   },
   packageDetails: {
     paddingTop: 0,
   },
   divider: {
     height: 1,
-    backgroundColor: Colors.border,
-    marginHorizontal: Spacing.md,
+    backgroundColor: '#F3F4F6',
+    marginVertical: Spacing.lg,
   },
   packageInstructions: {
-    padding: Spacing.md,
+    paddingVertical: Spacing.md,
   },
   instructionsHeader: {
     flexDirection: 'row',
@@ -798,8 +808,7 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   packageMetadata: {
-    padding: Spacing.md,
-    backgroundColor: Colors.background,
+    paddingVertical: Spacing.md,
   },
   metadataRow: {
     marginBottom: Spacing.sm,
@@ -833,9 +842,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   referenceFilesSection: {
-    padding: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    paddingVertical: Spacing.md,
   },
   referenceFileItem: {
     flexDirection: 'row',
@@ -853,9 +860,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   packageProductsSection: {
-    padding: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    paddingVertical: Spacing.md,
   },
   packageProductCard: {
     backgroundColor: Colors.white,
@@ -1023,25 +1028,27 @@ const styles = StyleSheet.create({
   footer: {
     backgroundColor: Colors.white,
     padding: Spacing.lg,
+    paddingBottom: Spacing.xl,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: '#E5E7EB',
   },
   applyButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.primary,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.lg,
+    backgroundColor: '#6366F1',
+    paddingVertical: 16,
+    borderRadius: 14,
     gap: Spacing.sm,
   },
   appliedButton: {
     backgroundColor: Colors.success,
   },
   applyButtonText: {
-    fontSize: Typography.fontSize.base,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
     color: Colors.white,
+    letterSpacing: 0.3,
   },
 });
 
