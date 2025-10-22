@@ -135,6 +135,18 @@ const CampaignsScreen: React.FC = () => {
     return labels[objective] || objective;
   };
 
+  const getObjectiveColors = (objective: string) => {
+    const colors: { [key: string]: { bg: string; text: string; icon: string } } = {
+      'paid_media_campaigns': { bg: '#FEF3C7', text: '#F59E0B', icon: 'campaign' },
+      'organic_social_channels': { bg: '#D1FAE5', text: '#059669', icon: 'share' },
+      'ecommerce_web_pages': { bg: '#DBEAFE', text: '#2563EB', icon: 'shopping-cart' },
+      'creative_asset_production': { bg: '#E9D5FF', text: '#9333EA', icon: 'palette' },
+      'brand_awareness': { bg: '#FCE7F3', text: '#DB2777', icon: 'star' },
+      'product_launch': { bg: '#FED7AA', text: '#EA580C', icon: 'rocket-launch' },
+    };
+    return colors[objective] || { bg: '#F3F4F6', text: '#6B7280', icon: 'flag' };
+  };
+
   const getPackageTypeColor = (contentType: string) => {
     const type = contentType?.toLowerCase() || '';
     if (type.includes('video')) return '#9333EA'; // purple
@@ -209,17 +221,23 @@ const CampaignsScreen: React.FC = () => {
           {/* Tags Row */}
           <View style={styles.tagsContainer}>
             {campaign.objective && (
-              <View style={[styles.tag, styles.tagPrimary]}>
-                <Icon name="flag" size={12} color="#6366F1" />
-                <Text style={styles.tagTextPrimary}>
+              <View style={[styles.tag, { backgroundColor: getObjectiveColors(campaign.objective).bg }]}>
+                <Icon name={getObjectiveColors(campaign.objective).icon} size={12} color={getObjectiveColors(campaign.objective).text} />
+                <Text style={[styles.tagText, { color: getObjectiveColors(campaign.objective).text }]}>
                   {getObjectiveLabel(campaign.objective)}
                 </Text>
               </View>
             )}
             {campaign.product_shipping === 'required' && (
-              <View style={[styles.tag, styles.tagSuccess]}>
+              <View style={[styles.tag, { backgroundColor: '#D1FAE5' }]}>
                 <Icon name="card-giftcard" size={12} color="#059669" />
-                <Text style={styles.tagTextSuccess}>Products Included</Text>
+                <Text style={[styles.tagText, { color: '#059669' }]}>Products Included</Text>
+              </View>
+            )}
+            {campaign.product_shipping === 'not_required' && (
+              <View style={[styles.tag, { backgroundColor: '#E0E7FF' }]}>
+                <Icon name="edit" size={12} color="#4F46E5" />
+                <Text style={[styles.tagText, { color: '#4F46E5' }]}>Content Only</Text>
               </View>
             )}
           </View>
@@ -264,14 +282,30 @@ const CampaignsScreen: React.FC = () => {
         <View style={styles.cardFooter}>
           <View style={styles.socialRow}>
             {brand?.instagram_handle && (
-              <View style={styles.socialBadge}>
-                <Text style={styles.socialBadgeText}>IG</Text>
-              </View>
+              <TouchableOpacity 
+                style={styles.socialBadge}
+                onPress={() => {
+                  // You can add Linking.openURL here to open Instagram
+                  console.log('Open Instagram:', brand.instagram_handle);
+                }}
+                activeOpacity={0.7}
+              >
+                <Icon name="camera-alt" size={12} color="#E1306C" />
+                <Text style={styles.socialBadgeText}>@{brand.instagram_handle}</Text>
+              </TouchableOpacity>
             )}
             {brand?.tiktok_handle && (
-              <View style={styles.socialBadge}>
-                <Text style={styles.socialBadgeText}>TT</Text>
-              </View>
+              <TouchableOpacity 
+                style={styles.socialBadge}
+                onPress={() => {
+                  // You can add Linking.openURL here to open TikTok
+                  console.log('Open TikTok:', brand.tiktok_handle);
+                }}
+                activeOpacity={0.7}
+              >
+                <Icon name="music-note" size={12} color="#000000" />
+                <Text style={styles.socialBadgeText}>@{brand.tiktok_handle}</Text>
+              </TouchableOpacity>
             )}
           </View>
           <View style={styles.viewDetailsButton}>
@@ -336,38 +370,42 @@ const CampaignsScreen: React.FC = () => {
   };
 
   const filteredAvailableCampaigns = availableCampaigns.filter(campaign => {
-    // Apply search filter
-    const matchesSearch = 
-      (campaign.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (campaign.description || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const query = searchQuery.toLowerCase();
+    
+    // Apply search filter - search through title, description, brand name, and objective
+    const matchesSearch = query === '' || 
+      (campaign.title || '').toLowerCase().includes(query) ||
+      (campaign.description || '').toLowerCase().includes(query) ||
+      (campaign.brands?.brand_name || '').toLowerCase().includes(query) ||
+      (campaign.objective || '').toLowerCase().replace(/_/g, ' ').includes(query);
     
     // Apply objective filter
-    const matchesObjective = selectedObjective 
-      ? campaign.objective === selectedObjective 
-      : true;
+    const matchesObjective = !selectedObjective || campaign.objective === selectedObjective;
     
     // Apply shipping filter
-    const matchesShipping = selectedShipping
-      ? campaign.product_shipping === selectedShipping
-      : true;
+    const matchesShipping = !selectedShipping || campaign.product_shipping === selectedShipping;
     
     return matchesSearch && matchesObjective && matchesShipping;
   });
 
   const filteredApplications = myApplications.filter(app => {
     const campaign = app.campaigns;
-    return (
-      (campaign?.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (campaign?.description || '').toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const query = searchQuery.toLowerCase();
+    
+    return query === '' ||
+      (campaign?.title || '').toLowerCase().includes(query) ||
+      (campaign?.description || '').toLowerCase().includes(query) ||
+      (campaign?.brands?.brand_name || '').toLowerCase().includes(query);
   });
 
   const filteredCollaborations = activeCollaborations.filter(collab => {
     const campaign = collab.campaigns;
-    return (
-      (campaign?.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (campaign?.description || '').toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const query = searchQuery.toLowerCase();
+    
+    return query === '' ||
+      (campaign?.title || '').toLowerCase().includes(query) ||
+      (campaign?.description || '').toLowerCase().includes(query) ||
+      (campaign?.brands?.brand_name || '').toLowerCase().includes(query);
   });
 
   const renderTabContent = () => {
@@ -692,21 +730,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     gap: 4,
   },
-  tagPrimary: {
-    backgroundColor: '#EEF2FF',
-  },
-  tagSuccess: {
-    backgroundColor: '#D1FAE5',
-  },
-  tagTextPrimary: {
+  tagText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#6366F1',
-  },
-  tagTextSuccess: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#059669',
   },
   packagesCompact: {
     backgroundColor: '#F9FAFB',
@@ -775,20 +801,25 @@ const styles = StyleSheet.create({
   },
   socialRow: {
     flexDirection: 'row',
-    gap: 6,
+    gap: 8,
+    flex: 1,
+    flexWrap: 'wrap',
   },
   socialBadge: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: '#E5E7EB',
+    gap: 4,
   },
   socialBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#6B7280',
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#374151',
   },
   viewDetailsButton: {
     flexDirection: 'row',

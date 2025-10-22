@@ -22,8 +22,8 @@ interface FilterModalProps {
 
 const objectives = [
   { value: null, label: 'All Objectives' },
-  { value: 'paid_media', label: 'Paid Media' },
-  { value: 'organic_social', label: 'Organic Social' },
+  { value: 'paid_media_campaigns', label: 'Paid Media' },
+  { value: 'organic_social_channels', label: 'Organic Social' },
   { value: 'ecommerce_web_pages', label: 'E-commerce' },
   { value: 'creative_asset_production', label: 'Creative Assets' },
   { value: 'brand_awareness', label: 'Brand Awareness' },
