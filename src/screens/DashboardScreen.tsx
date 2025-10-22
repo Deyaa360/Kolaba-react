@@ -110,16 +110,14 @@ const DashboardScreen: React.FC = () => {
     loadDashboardData();
   };
 
-  const renderStatCard = (title: string, value: string, icon: string, color: string) => (
-    <View style={[styles.statCard, { borderLeftColor: color, borderLeftWidth: 4 }]}>
+  const renderStatCard = (title: string, value: string, icon: string, color: string, gradient: string[]) => (
+    <View style={[styles.statCard, { borderColor: color + '30' }]}>
+      <View style={[styles.statIconContainer, { backgroundColor: color + '15' }]}>
+        <Icon name={icon} size={24} color={color} />
+      </View>
       <View style={styles.statContent}>
-        <View style={[styles.iconContainer, { backgroundColor: color + '20' }]}>
-          <Icon name={icon} size={24} color={color} />
-        </View>
-        <View style={styles.statTextContainer}>
-          <Text style={styles.statValue}>{value}</Text>
-          <Text style={styles.statTitle}>{title}</Text>
-        </View>
+        <Text style={styles.statValue}>{value}</Text>
+        <Text style={styles.statTitle}>{title}</Text>
       </View>
     </View>
   );
@@ -131,36 +129,42 @@ const DashboardScreen: React.FC = () => {
       <TouchableOpacity
         key={campaign.id}
         style={styles.campaignCard}
+        activeOpacity={0.95}
         onPress={() => {
           (navigation as any).navigate('CampaignDetails', { campaignId: campaign.id });
         }}
       >
-        <View style={styles.campaignHeader}>
-          <View style={styles.brandLogoContainer}>
-            {brand?.logo_url ? (
-              <Image
-                source={{ uri: brand.logo_url }}
-                style={styles.brandLogo}
-                resizeMode="cover"
-              />
-            ) : (
-              <Icon name="business" size={24} color={Colors.primary} />
-            )}
+        <View style={styles.campaignCardContent}>
+          <View style={styles.campaignCardHeader}>
+            <View style={styles.brandLogoWrapper}>
+              {brand?.logo_url ? (
+                <Image
+                  source={{ uri: brand.logo_url }}
+                  style={styles.brandLogo}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={styles.brandLogoPlaceholder}>
+                  <Icon name="business" size={20} color="#6366F1" />
+                </View>
+              )}
+            </View>
+            <View style={styles.campaignTextContent}>
+              <Text style={styles.campaignTitle} numberOfLines={1}>
+                {campaign.title || 'Untitled Campaign'}
+              </Text>
+              <Text style={styles.brandName} numberOfLines={1}>
+                {brand?.brand_name || 'Unknown Brand'}
+              </Text>
+            </View>
+            <Icon name="chevron-right" size={20} color="#9CA3AF" />
           </View>
-          <View style={styles.campaignInfo}>
-            <Text style={styles.campaignTitle} numberOfLines={1}>
-              {campaign.title || 'Untitled Campaign'}
+          {campaign.description && (
+            <Text style={styles.campaignDescription} numberOfLines={2}>
+              {campaign.description}
             </Text>
-            <Text style={styles.brandName} numberOfLines={1}>
-              {brand?.brand_name || 'Unknown Brand'}
-            </Text>
-          </View>
+          )}
         </View>
-        {campaign.description && (
-          <Text style={styles.campaignDescription} numberOfLines={2}>
-            {campaign.description}
-          </Text>
-        )}
       </TouchableOpacity>
     );
   };
@@ -173,7 +177,15 @@ const DashboardScreen: React.FC = () => {
       switch (application.status) {
         case 'approved': return '#10B981';
         case 'rejected': return '#EF4444';
-        default: return Colors.primary;
+        default: return '#F59E0B';
+      }
+    };
+
+    const getStatusBg = () => {
+      switch (application.status) {
+        case 'approved': return '#D1FAE5';
+        case 'rejected': return '#FEE2E2';
+        default: return '#FEF3C7';
       }
     };
 
@@ -181,6 +193,7 @@ const DashboardScreen: React.FC = () => {
       <TouchableOpacity
         key={application.id}
         style={styles.applicationCard}
+        activeOpacity={0.95}
         onPress={() => {
           if (campaign?.id) {
             (navigation as any).navigate('CampaignDetails', { campaignId: campaign.id });
@@ -196,7 +209,7 @@ const DashboardScreen: React.FC = () => {
                 resizeMode="cover"
               />
             ) : (
-              <Icon name="business" size={24} color={Colors.primary} />
+              <Icon name="business" size={20} color="#6366F1" />
             )}
           </View>
           <View style={styles.applicationInfo}>
@@ -207,7 +220,7 @@ const DashboardScreen: React.FC = () => {
               {brand?.brand_name || 'Unknown Brand'}
             </Text>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor() + '20' }]}>
+          <View style={[styles.statusBadge, { backgroundColor: getStatusBg() }]}>
             <Text style={[styles.statusText, { color: getStatusColor() }]}>
               {application.status?.toUpperCase() || 'PENDING'}
             </Text>
@@ -251,13 +264,15 @@ const DashboardScreen: React.FC = () => {
           'Active Applications',
           `${pendingCount}`,
           'pending-actions',
-          '#F59E0B'
+          '#F59E0B',
+          ['#FEF3C7', '#FDE68A']
         )}
         {renderStatCard(
           'Approved',
           `${approvedCount}`,
           'check-circle',
-          '#10B981'
+          '#10B981',
+          ['#D1FAE5', '#A7F3D0']
         )}
       </View>
 
@@ -317,64 +332,67 @@ const DashboardScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: '#F9FAFB',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background,
+    backgroundColor: '#F9FAFB',
   },
   loadingText: {
     marginTop: Spacing.md,
-    fontSize: Typography.fontSize.base,
-    color: Colors.textSecondary,
+    fontSize: 14,
+    color: '#9CA3AF',
   },
   header: {
-    padding: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.xl,
+    paddingBottom: Spacing.lg,
+    backgroundColor: '#FFFFFF',
   },
   welcomeText: {
-    fontSize: Typography.fontSize.xl,
-    fontWeight: '700',
-    color: Colors.text,
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#111827',
+    letterSpacing: -0.5,
   },
   statsContainer: {
     flexDirection: 'row',
     paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
     gap: Spacing.md,
   },
   statCard: {
     flex: 1,
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.lg,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     padding: Spacing.lg,
-    ...Shadow.md,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
-  statContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  iconContainer: {
+  statIconContainer: {
     width: 48,
     height: 48,
-    borderRadius: BorderRadius.md,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: Spacing.sm,
   },
-  statTextContainer: {
-    marginLeft: Spacing.md,
-    flex: 1,
+  statContent: {
+    gap: 2,
   },
   statValue: {
-    fontSize: Typography.fontSize['2xl'],
+    fontSize: 32,
     fontWeight: '800',
-    color: Colors.text,
+    color: '#111827',
+    letterSpacing: -1,
   },
   statTitle: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.textSecondary,
-    marginTop: Spacing.xs,
+    fontSize: 13,
+    color: '#6B7280',
+    fontWeight: '500',
+    marginTop: 2,
   },
   section: {
     marginTop: Spacing.xl,
@@ -387,118 +405,141 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   sectionTitle: {
-    fontSize: Typography.fontSize.lg,
+    fontSize: 20,
     fontWeight: '700',
-    color: Colors.text,
+    color: '#111827',
   },
   viewAllText: {
-    fontSize: Typography.fontSize.base,
-    color: Colors.primary,
+    fontSize: 14,
+    color: '#6366F1',
     fontWeight: '600',
   },
   campaignsList: {
-    gap: Spacing.md,
+    gap: Spacing.sm,
   },
   campaignCard: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.lg,
-    ...Shadow.lg,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    marginBottom: Spacing.sm,
   },
-  campaignHeader: {
+  campaignCardContent: {
+    padding: Spacing.md,
+  },
+  campaignCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: Spacing.sm,
   },
-  brandLogoContainer: {
-    width: 52,
-    height: 52,
-    borderRadius: BorderRadius.lg,
-    backgroundColor: Colors.primaryLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: Colors.primary + '40',
+  brandLogoWrapper: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     overflow: 'hidden',
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   brandLogo: {
     width: '100%',
     height: '100%',
   },
-  campaignInfo: {
+  brandLogoPlaceholder: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#EEF2FF',
+  },
+  campaignTextContent: {
     marginLeft: Spacing.md,
     flex: 1,
   },
   campaignTitle: {
-    fontSize: Typography.fontSize.base,
+    fontSize: 15,
     fontWeight: '600',
-    color: Colors.text,
+    color: '#111827',
+    marginBottom: 2,
   },
   brandName: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.textSecondary,
-    marginTop: Spacing.xs,
+    fontSize: 13,
+    color: '#6B7280',
   },
   campaignDescription: {
-    marginTop: Spacing.md,
-    fontSize: Typography.fontSize.sm,
-    color: Colors.textSecondary,
-    lineHeight: 20,
+    fontSize: 13,
+    color: '#4B5563',
+    lineHeight: 18,
   },
   applicationsList: {
-    gap: Spacing.md,
+    gap: Spacing.sm,
   },
   applicationCard: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.lg,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
     padding: Spacing.md,
-    ...Shadow.md,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    marginBottom: Spacing.sm,
   },
   applicationHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  brandLogoContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
   },
   applicationInfo: {
     marginLeft: Spacing.md,
     flex: 1,
   },
   applicationTitle: {
-    fontSize: Typography.fontSize.base,
+    fontSize: 15,
     fontWeight: '600',
-    color: Colors.text,
+    color: '#111827',
   },
   applicationBrand: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.textSecondary,
-    marginTop: Spacing.xs,
+    fontSize: 13,
+    color: '#6B7280',
+    marginTop: 2,
   },
   statusBadge: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.full,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
     marginLeft: Spacing.sm,
   },
   statusText: {
-    fontSize: Typography.fontSize.xs,
+    fontSize: 11,
     fontWeight: '700',
   },
   emptyState: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.lg,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
     padding: Spacing.xl,
     alignItems: 'center',
-    ...Shadow.sm,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   emptyStateText: {
-    fontSize: Typography.fontSize.base,
+    fontSize: 16,
     fontWeight: '600',
-    color: Colors.text,
+    color: '#111827',
     marginTop: Spacing.md,
   },
   emptyStateSubtext: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.textSecondary,
+    fontSize: 13,
+    color: '#6B7280',
     textAlign: 'center',
-    marginTop: Spacing.sm,
+    marginTop: Spacing.xs,
+    lineHeight: 18,
   },
 });
 

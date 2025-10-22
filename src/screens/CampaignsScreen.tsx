@@ -154,151 +154,132 @@ const CampaignsScreen: React.FC = () => {
   const renderCampaignCard = (campaign: Campaign) => {
     const brand = campaign.brands;
     const contentPackages = campaign.campaign_content_packages || [];
-    const hasProducts = campaign.product_shipping === 'required';
     
     return (
-      <View key={campaign.id} style={styles.campaignCard}>
-        {/* Header */}
-        <View style={styles.campaignHeader}>
-          <View style={styles.brandLogoContainer}>
-            {brand?.logo_url ? (
-              <Image
-                source={{ uri: brand.logo_url }}
-                style={styles.brandLogo}
-                resizeMode="cover"
-                onError={(e) => {
-                  console.log('Failed to load brand logo');
-                }}
-              />
-            ) : (
-              <Icon name="business" size={24} color={Colors.primary} />
-            )}
-          </View>
-          <View style={styles.campaignInfo}>
-            <Text style={styles.campaignTitle} numberOfLines={1}>
-              {campaign.title || 'Untitled Campaign'}
-            </Text>
-            <Text style={styles.brandName} numberOfLines={1}>
-              {brand?.brand_name || 'Unknown Brand'}
-            </Text>
-            {brand?.website && (
-              <Text style={styles.brandWebsite} numberOfLines={1}>
-                {brand.website.replace(/^https?:\/\//, '')}
-              </Text>
-            )}
-          </View>
-        </View>
-        
-        {/* Description */}
-        {campaign.description && (
-          <Text style={styles.campaignDescription} numberOfLines={2}>
-            {campaign.description}
-          </Text>
-        )}
-
-        {/* Detail Chips */}
-        <View style={styles.chipsRow}>
-          {campaign.objective && (
-            <DetailChip 
-              label={getObjectiveLabel(campaign.objective)}
-              backgroundColor="#EEF2FF"
-              textColor="#6366F1"
-              size="small"
-            />
-          )}
-          {campaign.product_shipping === 'required' && (
-            <DetailChip 
-              label="Products Included"
-              icon="local-shipping"
-              backgroundColor="#D1FAE5"
-              textColor="#059669"
-              size="small"
-            />
-          )}
-          {campaign.product_shipping === 'not_required' && (
-            <DetailChip 
-              label="Content Only"
-              icon="edit"
-              backgroundColor="#F3F4F6"
-              textColor="#6B7280"
-              size="small"
-            />
-          )}
-        </View>
-
-        {/* Content Packages Preview */}
-        {contentPackages.length > 0 && (
-          <View style={styles.contentPackagesPreview}>
-            <View style={styles.packagesHeader}>
-              <Icon name="inventory" size={16} color={Colors.primary} />
-              <Text style={styles.packagesCount}>
-                Content Packages ({contentPackages.length})
-              </Text>
+      <TouchableOpacity
+        key={campaign.id}
+        style={styles.campaignCard}
+        activeOpacity={0.95}
+        onPress={() => {
+          (navigation as any).navigate('CampaignDetails', { campaignId: campaign.id });
+        }}
+      >
+        {/* Gradient Background Header */}
+        <View style={styles.cardHeader}>
+          <View style={styles.brandSection}>
+            <View style={styles.brandLogoWrapper}>
+              {brand?.logo_url ? (
+                <Image
+                  source={{ uri: brand.logo_url }}
+                  style={styles.brandLogo}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={styles.brandLogoPlaceholder}>
+                  <Icon name="business" size={22} color="#6366F1" />
+                </View>
+              )}
             </View>
-            {contentPackages.slice(0, 3).map((pkg: any, index: number) => {
-              const packageColor = getPackageTypeColor(pkg.content_type);
-              const packageLabel = getPackageTypeLabel(pkg.content_type);
-              const quantity = pkg.quantity_needed || 1;
-              
-              // Get products for this package
-              const hasProducts = pkg.product_ids && pkg.product_ids.length > 0;
-              const productCount = hasProducts ? 
-                (Array.isArray(pkg.product_ids) ? pkg.product_ids.length : 
-                  (typeof pkg.product_ids === 'string' ? pkg.product_ids.split(',').length : 0)) : 0;
-              
-              return (
-                <View key={index} style={styles.packageItem}>
-                  <View style={[styles.packageDot, { backgroundColor: packageColor }]} />
-                  <Text style={styles.packageTitle} numberOfLines={1}>
-                    {packageLabel}
-                    {productCount > 0 && ` • ${productCount} product${productCount > 1 ? 's' : ''}`}
-                  </Text>
-                  <View style={[styles.packageQuantityBadge, { backgroundColor: packageColor + '20' }]}>
-                    <Text style={[styles.packageQuantityText, { color: packageColor }]}>
-                      x{quantity}
+            <View style={styles.brandInfo}>
+              <Text style={styles.brandName} numberOfLines={1}>
+                {brand?.brand_name || 'Unknown Brand'}
+              </Text>
+              {brand?.website && (
+                <Text style={styles.brandWebsite} numberOfLines={1}>
+                  {brand.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                </Text>
+              )}
+            </View>
+          </View>
+        </View>
+
+        {/* Campaign Title */}
+        <View style={styles.cardBody}>
+          <Text style={styles.campaignTitle} numberOfLines={2}>
+            {campaign.title || 'Untitled Campaign'}
+          </Text>
+          
+          {/* Description */}
+          {campaign.description && (
+            <Text style={styles.campaignDescription} numberOfLines={3}>
+              {campaign.description}
+            </Text>
+          )}
+
+          {/* Tags Row */}
+          <View style={styles.tagsContainer}>
+            {campaign.objective && (
+              <View style={[styles.tag, styles.tagPrimary]}>
+                <Icon name="flag" size={12} color="#6366F1" />
+                <Text style={styles.tagTextPrimary}>
+                  {getObjectiveLabel(campaign.objective)}
+                </Text>
+              </View>
+            )}
+            {campaign.product_shipping === 'required' && (
+              <View style={[styles.tag, styles.tagSuccess]}>
+                <Icon name="card-giftcard" size={12} color="#059669" />
+                <Text style={styles.tagTextSuccess}>Products Included</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Content Packages - Compact View */}
+          {contentPackages.length > 0 && (
+            <View style={styles.packagesCompact}>
+              <View style={styles.packagesCompactHeader}>
+                <Icon name="video-library" size={16} color="#8B5CF6" />
+                <Text style={styles.packagesCompactTitle}>
+                  {contentPackages.length} Content Package{contentPackages.length > 1 ? 's' : ''}
+                </Text>
+              </View>
+              <View style={styles.packagesGrid}>
+                {contentPackages.slice(0, 2).map((pkg: any, index: number) => {
+                  const packageColor = getPackageTypeColor(pkg.content_type);
+                  const packageLabel = getPackageTypeLabel(pkg.content_type);
+                  const quantity = pkg.quantity_needed || 1;
+                  
+                  return (
+                    <View key={index} style={styles.packagePill}>
+                      <View style={[styles.packageDot, { backgroundColor: packageColor }]} />
+                      <Text style={styles.packagePillText} numberOfLines={1}>
+                        {packageLabel} x{quantity}
+                      </Text>
+                    </View>
+                  );
+                })}
+                {contentPackages.length > 2 && (
+                  <View style={styles.packagePillMore}>
+                    <Text style={styles.packagePillMoreText}>
+                      +{contentPackages.length - 2}
                     </Text>
                   </View>
-                </View>
-              );
-            })}
-            {contentPackages.length > 3 && (
-              <Text style={styles.morePackagesText}>
-                +{contentPackages.length - 3} more package{contentPackages.length - 3 > 1 ? 's' : ''}
-              </Text>
-            )}
-          </View>
-        )}
+                )}
+              </View>
+            </View>
+          )}
+        </View>
 
-        {/* Social Handles */}
-        {(brand?.instagram_handle || brand?.tiktok_handle) && (
-          <View style={styles.socialHandles}>
+        {/* Footer */}
+        <View style={styles.cardFooter}>
+          <View style={styles.socialRow}>
             {brand?.instagram_handle && (
-              <Text style={styles.socialText}>
-                @{brand.instagram_handle} (IG)
-              </Text>
-            )}
-            {brand?.instagram_handle && brand?.tiktok_handle && (
-              <Text style={styles.socialSeparator}> • </Text>
+              <View style={styles.socialBadge}>
+                <Text style={styles.socialBadgeText}>IG</Text>
+              </View>
             )}
             {brand?.tiktok_handle && (
-              <Text style={styles.socialText}>
-                @{brand.tiktok_handle} (TT)
-              </Text>
+              <View style={styles.socialBadge}>
+                <Text style={styles.socialBadgeText}>TT</Text>
+              </View>
             )}
           </View>
-        )}
-
-        {/* Apply Button */}
-        <TouchableOpacity
-          style={styles.applyButton}
-          onPress={() => {
-            (navigation as any).navigate('CampaignDetails', { campaignId: campaign.id });
-          }}
-        >
-          <Text style={styles.applyButtonText}>View Details & Apply</Text>
-          <Icon name="arrow-forward" size={18} color="#FFFFFF" />
-        </TouchableOpacity>
-      </View>
+          <View style={styles.viewDetailsButton}>
+            <Text style={styles.viewDetailsText}>View Details</Text>
+            <Icon name="arrow-forward" size={14} color="#6366F1" />
+          </View>
+        </View>
+      </TouchableOpacity>
     );
   };
 
@@ -534,303 +515,358 @@ const CampaignsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#F9FAFB',
   },
   header: {
     backgroundColor: Colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
   },
   searchFilterRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.md,
-    paddingBottom: Spacing.sm,
+    paddingBottom: Spacing.md,
     gap: Spacing.sm,
   },
   searchContainer: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.background,
-    borderRadius: BorderRadius.md,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
     paddingHorizontal: Spacing.md,
-    height: 36,
+    height: 44,
   },
   searchInput: {
     flex: 1,
     marginLeft: Spacing.sm,
-    fontSize: Typography.fontSize.sm,
+    fontSize: Typography.fontSize.base,
     color: Colors.text,
   },
   filterButton: {
-    width: 36,
-    height: 36,
-    borderRadius: BorderRadius.md,
-    backgroundColor: Colors.background,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
   },
   filterBadge: {
     position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.primary,
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#6366F1',
   },
   tabsContainer: {
     flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
     paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
   },
   tabButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: Spacing.md,
+    paddingVertical: 12,
     borderBottomWidth: 2,
     borderBottomColor: 'transparent',
-    marginBottom: -1,
-    gap: Spacing.xs,
+    gap: 6,
   },
   tabButtonActive: {
-    borderBottomColor: Colors.primary,
+    borderBottomColor: '#6366F1',
   },
   tabLabel: {
-    fontSize: Typography.fontSize.sm,
+    fontSize: 14,
     fontWeight: '500',
-    color: Colors.textSecondary,
+    color: '#6B7280',
   },
   tabLabelActive: {
-    color: Colors.primary,
+    color: '#6366F1',
     fontWeight: '600',
   },
   tabContent: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
   },
   contentContainer: {
-    paddingTop: Spacing.lg,
-    paddingHorizontal: Spacing.lg,
+    padding: Spacing.lg,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: Spacing['3xl'],
+    paddingVertical: 80,
   },
   loadingText: {
     marginTop: Spacing.md,
     fontSize: Typography.fontSize.base,
-    color: Colors.textSecondary,
+    color: '#9CA3AF',
   },
+  
+  // Modern Campaign Card
   campaignCard: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.lg,
-    marginBottom: Spacing.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    marginBottom: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
-  campaignHeader: {
+  cardHeader: {
+    backgroundColor: '#F9FAFB',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  brandSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing.md,
   },
-  brandLogoContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F0F4FF',
-    justifyContent: 'center',
-    alignItems: 'center',
+  brandLogoWrapper: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
     overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   brandLogo: {
     width: '100%',
     height: '100%',
   },
-  campaignInfo: {
-    marginLeft: Spacing.md,
+  brandLogoPlaceholder: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#EEF2FF',
+  },
+  brandInfo: {
+    marginLeft: 12,
     flex: 1,
   },
-  campaignTitle: {
-    fontSize: Typography.fontSize.base,
-    fontWeight: '600',
-    color: Colors.text,
+  brandName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#111827',
     marginBottom: 2,
   },
-  brandName: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.textSecondary,
-  },
   brandWebsite: {
-    fontSize: Typography.fontSize.xs,
-    color: Colors.textSecondary,
-    marginTop: 2,
+    fontSize: 13,
+    color: '#6B7280',
+  },
+  cardBody: {
+    padding: 16,
+  },
+  campaignTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#111827',
+    lineHeight: 24,
+    marginBottom: 8,
   },
   campaignDescription: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text,
+    fontSize: 14,
+    color: '#4B5563',
     lineHeight: 20,
-    marginBottom: Spacing.sm,
+    marginBottom: 12,
   },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  tag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    gap: 4,
+  },
+  tagPrimary: {
+    backgroundColor: '#EEF2FF',
+  },
+  tagSuccess: {
+    backgroundColor: '#D1FAE5',
+  },
+  tagTextPrimary: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6366F1',
+  },
+  tagTextSuccess: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#059669',
+  },
+  packagesCompact: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  packagesCompactHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 6,
+  },
+  packagesCompactTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#8B5CF6',
+  },
+  packagesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  packagePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  packageDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  packagePillText: {
+    fontSize: 12,
+    color: '#374151',
+    fontWeight: '500',
+  },
+  packagePillMore: {
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  packagePillMoreText: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '600',
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#F9FAFB',
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+  },
+  socialRow: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  socialBadge: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  socialBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#6B7280',
+  },
+  viewDetailsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  viewDetailsText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6366F1',
+  },
+  
+  // Application Card
   applicationCard: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.lg,
-    marginBottom: Spacing.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   applicationHeader: {
     flexDirection: 'row',
     alignItems: 'center',
   },
+  brandLogoContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
   applicationInfo: {
-    marginLeft: Spacing.md,
+    marginLeft: 12,
     flex: 1,
   },
   applicationTitle: {
-    fontSize: Typography.fontSize.base,
+    fontSize: 15,
     fontWeight: '600',
-    color: Colors.text,
+    color: '#111827',
   },
   applicationBrand: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.textSecondary,
-    marginTop: Spacing.xs,
+    fontSize: 13,
+    color: '#6B7280',
+    marginTop: 2,
   },
   statusBadge: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.full,
-    marginLeft: Spacing.sm,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    marginLeft: 8,
   },
   statusText: {
-    fontSize: Typography.fontSize.xs,
+    fontSize: 11,
     fontWeight: '700',
   },
+  
+  // Empty State
   emptyState: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: Spacing['3xl'] * 2,
+    paddingVertical: 80,
   },
   emptyStateText: {
-    fontSize: Typography.fontSize.lg,
+    fontSize: 18,
     fontWeight: '600',
-    color: Colors.text,
-    marginTop: Spacing.lg,
+    color: '#111827',
+    marginTop: 16,
   },
   emptyStateSubtext: {
-    fontSize: Typography.fontSize.base,
-    color: Colors.textSecondary,
+    fontSize: 14,
+    color: '#6B7280',
     textAlign: 'center',
-    marginTop: Spacing.sm,
-  },
-  // Card styling
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.md,
-  },
-  chipsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.xs,
-    marginBottom: Spacing.sm,
-  },
-  contentPackagesPreview: {
-    backgroundColor: '#F0F9FF',
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    marginBottom: Spacing.sm,
-    borderLeftWidth: 3,
-    borderLeftColor: '#3B82F6',
-  },
-  packagesHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.xs,
-  },
-  packagesCount: {
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.semibold,
-    color: '#3B82F6',
-    marginLeft: Spacing.xs,
-  },
-  packageTitle: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text,
-    marginLeft: Spacing.sm,
-    flex: 1,
-  },
-  packageItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: Spacing.sm,
-    paddingVertical: Spacing.xs,
-  },
-  packageDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  packageQuantityBadge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.sm,
-    marginLeft: Spacing.sm,
-  },
-  packageQuantityText: {
-    fontSize: Typography.fontSize.xs,
-    fontWeight: Typography.fontWeight.semibold,
-  },
-  morePackagesText: {
-    fontSize: Typography.fontSize.xs,
-    color: Colors.textSecondary,
-    marginTop: Spacing.sm,
-    fontStyle: 'italic',
-  },
-  socialHandles: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: Spacing.md,
-  },
-  socialText: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.textSecondary,
-  },
-  socialSeparator: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.textSecondary,
-    fontWeight: Typography.fontWeight.bold,
-  },
-  applyButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.primary,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    gap: Spacing.xs,
-  },
-  applyButtonText: {
-    fontSize: Typography.fontSize.base,
-    fontWeight: Typography.fontWeight.semibold,
-    color: '#FFFFFF',
+    marginTop: 8,
+    paddingHorizontal: 32,
   },
 });
 
