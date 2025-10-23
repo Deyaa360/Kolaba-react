@@ -14,7 +14,19 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import FastImage from 'react-native-fast-image';
 import supabaseService from '../services/supabase';
 import { Colors, Typography, Spacing, BorderRadius } from '../theme';
-import { AnimatedCard, AnimatedButton, SkeletonStatCard as SkeletonStatCardNew, SkeletonListItem as SkeletonListItemNew, EmptyState, ToastNotification, ActionCard } from '../components';
+import { 
+  AnimatedCard, 
+  AnimatedButton, 
+  SkeletonStatCard as SkeletonStatCardNew, 
+  SkeletonListItem as SkeletonListItemNew, 
+  EmptyState, 
+  ToastNotification, 
+  ActionCard,
+  InfoCard,
+  StatCard,
+  QuickActionButton,
+  FeatureCard
+} from '../components';
 
 interface Stats {
   totalApplications: number;
@@ -285,36 +297,36 @@ const DashboardScreen: React.FC = () => {
       {/* Quick Stats Cards */}
       <View style={styles.statsContainer}>
         <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <View style={[styles.statIconContainer, { backgroundColor: '#EEF2FF' }]}>
-              <Icon name="assignment" size={20} color="#6366F1" />
-            </View>
-            <Text style={styles.statValue}>{stats.totalApplications}</Text>
-            <Text style={styles.statLabel}>Total Applied</Text>
-          </View>
-          <View style={styles.statCard}>
-            <View style={[styles.statIconContainer, { backgroundColor: '#D1FAE5' }]}>
-              <Icon name="check-circle" size={20} color="#059669" />
-            </View>
-            <Text style={styles.statValue}>{stats.approvedApplications}</Text>
-            <Text style={styles.statLabel}>Approved</Text>
-          </View>
+          <StatCard
+            icon="assignment"
+            iconColor="#6366F1"
+            iconBackground="#EEF2FF"
+            value={stats.totalApplications}
+            label="Total Applied"
+          />
+          <StatCard
+            icon="check-circle"
+            iconColor="#059669"
+            iconBackground="#D1FAE5"
+            value={stats.approvedApplications}
+            label="Approved"
+          />
         </View>
         <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <View style={[styles.statIconContainer, { backgroundColor: '#FEF3C7' }]}>
-              <Icon name="emoji-events" size={20} color="#D97706" />
-            </View>
-            <Text style={styles.statValue}>{stats.completedCampaigns}</Text>
-            <Text style={styles.statLabel}>Completed</Text>
-          </View>
-          <View style={styles.statCard}>
-            <View style={[styles.statIconContainer, { backgroundColor: '#ECFDF5' }]}>
-              <Icon name="payments" size={20} color="#059669" />
-            </View>
-            <Text style={styles.statValue}>${stats.totalEarnings.toFixed(0)}</Text>
-            <Text style={styles.statLabel}>Earnings</Text>
-          </View>
+          <StatCard
+            icon="emoji-events"
+            iconColor="#D97706"
+            iconBackground="#FEF3C7"
+            value={stats.completedCampaigns}
+            label="Completed"
+          />
+          <StatCard
+            icon="payments"
+            iconColor="#059669"
+            iconBackground="#ECFDF5"
+            value={`$${stats.totalEarnings.toFixed(0)}`}
+            label="Earnings"
+          />
         </View>
       </View>
 
@@ -336,41 +348,18 @@ const DashboardScreen: React.FC = () => {
             contentContainerStyle={styles.spotlightScroll}
           >
             {recentCampaigns.slice(0, 3).map((campaign) => (
-              <TouchableOpacity
-                key={campaign.id}
-                style={styles.actionCardWrapper}
-                activeOpacity={0.9}
-                onPress={() => (navigation as any).navigate('CampaignDetails', { campaignId: campaign.id })}
-              >
-                <View style={styles.spotlightCard}>
-                  <View style={styles.spotlightCardHeader}>
-                    {campaign.brands?.logo_url ? (
-                      <FastImage
-                        source={{ uri: campaign.brands.logo_url }}
-                        style={styles.spotlightLogo}
-                        resizeMode={FastImage.resizeMode.cover}
-                      />
-                    ) : (
-                      <View style={styles.spotlightLogoPlaceholder}>
-                        <Icon name="business" size={24} color="#6366F1" />
-                      </View>
-                    )}
-                  </View>
-                  <Text style={styles.spotlightCardTitle} numberOfLines={2}>
-                    {campaign.title}
-                  </Text>
-                  <Text style={styles.spotlightCardBrand} numberOfLines={1}>
-                    {campaign.brands?.brand_name || 'Brand Partnership'}
-                  </Text>
-                  <View style={styles.spotlightCardFooter}>
-                    <View style={styles.spotlightBadge}>
-                      <Icon name="auto-awesome" size={12} color="#6366F1" />
-                      <Text style={styles.spotlightBadgeText}>HOT</Text>
-                    </View>
-                    <Icon name="arrow-forward" size={16} color="#9CA3AF" />
-                  </View>
-                </View>
-              </TouchableOpacity>
+              <View key={campaign.id} style={styles.featureCardWrapper}>
+                <FeatureCard
+                  image={campaign.brands?.logo_url}
+                  icon={!campaign.brands?.logo_url ? "campaign" : undefined}
+                  title={campaign.title}
+                  description={campaign.brands?.brand_name}
+                  badge="HOT"
+                  badgeColor="#6366F1"
+                  badgeBackground="#EEF2FF"
+                  onPress={() => (navigation as any).navigate('CampaignDetails', { campaignId: campaign.id })}
+                />
+              </View>
             ))}
           </ScrollView>
         </View>
@@ -427,48 +416,72 @@ const DashboardScreen: React.FC = () => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.quickActionsGrid}>
-          <TouchableOpacity 
-            style={styles.quickActionCard}
+          <QuickActionButton
+            icon="explore"
+            label="Browse Campaigns"
+            iconColor="#6366F1"
+            iconBackground="#EEF2FF"
             onPress={() => (navigation as any).navigate('Campaigns')}
-          >
-            <View style={[styles.quickActionIcon, { backgroundColor: '#EEF2FF' }]}>
-              <Icon name="explore" size={24} color="#6366F1" />
-            </View>
-            <Text style={styles.quickActionLabel}>Browse Campaigns</Text>
-          </TouchableOpacity>
+          />
           
-          <TouchableOpacity 
-            style={styles.quickActionCard}
-            onPress={() => (navigation as any).navigate('Profile')}
-          >
-            <View style={[styles.quickActionIcon, { backgroundColor: '#FCE7F3' }]}>
-              <Icon name="person" size={24} color="#DB2777" />
-            </View>
-            <Text style={styles.quickActionLabel}>Edit Profile</Text>
-          </TouchableOpacity>
+          <QuickActionButton
+            icon="work"
+            label="My Projects"
+            iconColor="#059669"
+            iconBackground="#D1FAE5"
+            badge={stats.approvedApplications}
+            onPress={() => (navigation as any).navigate('Orders')}
+          />
           
-          <TouchableOpacity 
-            style={styles.quickActionCard}
-            onPress={() => (navigation as any).navigate('Campaigns', { screen: 'active' })}
-          >
-            <View style={[styles.quickActionIcon, { backgroundColor: '#D1FAE5' }]}>
-              <Icon name="handshake" size={24} color="#059669" />
-            </View>
-            <Text style={styles.quickActionLabel}>Active Projects</Text>
-          </TouchableOpacity>
+          <QuickActionButton
+            icon="chat"
+            label="Messages"
+            iconColor="#8B5CF6"
+            iconBackground="#F3E8FF"
+            badge={3}
+            onPress={() => (navigation as any).navigate('Messages')}
+          />
           
-          <TouchableOpacity 
-            style={styles.quickActionCard}
-            onPress={() => {
-              // TODO: Navigate to earnings/payments
-              showToast('Coming soon!', 'info');
-            }}
-          >
-            <View style={[styles.quickActionIcon, { backgroundColor: '#FEF3C7' }]}>
-              <Icon name="account-balance-wallet" size={24} color="#D97706" />
-            </View>
-            <Text style={styles.quickActionLabel}>Payments</Text>
-          </TouchableOpacity>
+          <QuickActionButton
+            icon="attach-money"
+            label="Earnings"
+            iconColor="#D97706"
+            iconBackground="#FEF3C7"
+            onPress={() => (navigation as any).navigate('Earnings')}
+          />
+          
+          <QuickActionButton
+            icon="star"
+            label="Reviews"
+            iconColor="#F59E0B"
+            iconBackground="#FEF3C7"
+            onPress={() => (navigation as any).navigate('Reviews')}
+          />
+          
+          <QuickActionButton
+            icon="notifications"
+            label="Notifications"
+            iconColor="#EF4444"
+            iconBackground="#FEE2E2"
+            badge={5}
+            onPress={() => (navigation as any).navigate('Notifications')}
+          />
+          
+          <QuickActionButton
+            icon="collections"
+            label="Content Library"
+            iconColor="#06B6D4"
+            iconBackground="#CFFAFE"
+            onPress={() => (navigation as any).navigate('ContentLibrary')}
+          />
+          
+          <QuickActionButton
+            icon="widgets"
+            label="Components"
+            iconColor="#DB2777"
+            iconBackground="#FCE7F3"
+            onPress={() => (navigation as any).navigate('ComponentsShowcase')}
+          />
         </View>
       </View>
 
@@ -481,41 +494,33 @@ const DashboardScreen: React.FC = () => {
           </View>
         </View>
         <View style={styles.tipsContainer}>
-          <View style={styles.tipCard}>
-            <View style={styles.tipIconContainer}>
-              <Icon name="lightbulb" size={20} color="#F59E0B" />
-            </View>
-            <View style={styles.tipContent}>
-              <Text style={styles.tipTitle}>Complete Your Profile</Text>
-              <Text style={styles.tipDescription}>
-                Brands are 3x more likely to approve complete profiles with portfolio links.
-              </Text>
-            </View>
-          </View>
+          <InfoCard
+            icon="lightbulb"
+            iconColor="#F59E0B"
+            iconBackground="#FEF3C7"
+            title="Complete Your Profile"
+            description="Brands are 3x more likely to approve complete profiles with portfolio links."
+            onPress={() => (navigation as any).navigate('Profile')}
+            showArrow={true}
+          />
           
-          <View style={styles.tipCard}>
-            <View style={styles.tipIconContainer}>
-              <Icon name="speed" size={20} color="#10B981" />
-            </View>
-            <View style={styles.tipContent}>
-              <Text style={styles.tipTitle}>Apply Early</Text>
-              <Text style={styles.tipDescription}>
-                Applications submitted within 24 hours have higher approval rates.
-              </Text>
-            </View>
-          </View>
+          <InfoCard
+            icon="speed"
+            iconColor="#10B981"
+            iconBackground="#D1FAE5"
+            title="Apply Early"
+            description="Applications submitted within 24 hours have higher approval rates."
+          />
           
-          <View style={styles.tipCard}>
-            <View style={styles.tipIconContainer}>
-              <Icon name="star" size={20} color="#8B5CF6" />
-            </View>
-            <View style={styles.tipContent}>
-              <Text style={styles.tipTitle}>Showcase Quality Work</Text>
-              <Text style={styles.tipDescription}>
-                Add your best content samples to stand out from other creators.
-              </Text>
-            </View>
-          </View>
+          <InfoCard
+            icon="star"
+            iconColor="#8B5CF6"
+            iconBackground="#F3E8FF"
+            title="Showcase Quality Work"
+            description="Add your best content samples to stand out from other creators."
+            onPress={() => (navigation as any).navigate('Profile')}
+            showArrow={true}
+          />
         </View>
       </View>
 
@@ -656,6 +661,9 @@ const styles = StyleSheet.create({
   spotlightScroll: {
     paddingHorizontal: Spacing.xl,
     gap: Spacing.md,
+  },
+  featureCardWrapper: {
+    width: 240,
   },
   actionCardWrapper: {
     width: 240,

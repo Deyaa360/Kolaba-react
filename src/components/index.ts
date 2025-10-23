@@ -19,3 +19,17 @@ export { default as InfoCard } from './InfoCard';
 export { default as StatCard } from './StatCard';
 export { default as FeatureCard } from './FeatureCard';
 export { default as QuickActionButton } from './QuickActionButton';
+export { default as ProgressCard } from './ProgressCard';
+export { default as StatusCard } from './StatusCard';
+export { default as ListItemCard } from './ListItemCard';
+export { default as SectionHeader } from './SectionHeader';
+
+// Freelancer/UGC Platform Components
+export { default as ProposalCard } from './ProposalCard';
+export { default as ClientCard } from './ClientCard';
+export { default as PortfolioItem } from './PortfolioItem';
+export { default as SkillBadge } from './SkillBadge';
+export { default as DeliverableItem } from './DeliverableItem';
+export { default as TimelineStep } from './TimelineStep';
+export { default as RatingBreakdown } from './RatingBreakdown';
+export { default as ServiceCard } from './ServiceCard';

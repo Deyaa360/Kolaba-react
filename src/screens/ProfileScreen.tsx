@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Colors, Typography, Spacing, BorderRadius } from '../theme';
 import supabaseService from '../services/supabase';
@@ -27,6 +28,7 @@ interface CreatorProfile {
 }
 
 const ProfileScreen = () => {
+  const navigation = useNavigation();
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [creatorProfile, setCreatorProfile] = useState<CreatorProfile | null>(null);
@@ -109,6 +111,18 @@ const ProfileScreen = () => {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+      {/* Settings Button */}
+      <View style={styles.topBar}>
+        <View style={{ width: 40 }} />
+        <Text style={styles.screenTitle}>Profile</Text>
+        <TouchableOpacity 
+          style={styles.settingsButton}
+          onPress={() => (navigation as any).navigate('Settings')}
+        >
+          <Icon name="settings" size={24} color="#6366F1" />
+        </TouchableOpacity>
+      </View>
+
       {/* Profile Header */}
       <View style={styles.header}>
         <View style={styles.avatarContainer}>
@@ -244,6 +258,28 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingBottom: Spacing.xl * 2,
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.lg,
+    paddingTop: 12,
+    paddingBottom: Spacing.md,
+    backgroundColor: Colors.white,
+  },
+  screenTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  settingsButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#EEF2FF',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   loadingContainer: {
     flex: 1,

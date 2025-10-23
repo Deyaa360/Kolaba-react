@@ -11,6 +11,14 @@ import CampaignsScreen from '../screens/CampaignsScreen';
 import CampaignDetailsScreen from '../screens/CampaignDetailsScreen';
 import ProductDetailsScreen from '../screens/ProductDetailsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import ComponentsShowcaseScreen from '../screens/ComponentsShowcaseScreen';
+import MessagesScreen from '../screens/MessagesScreen';
+import SettingsScreen from '../screens/SettingsScreen';
+import OrdersScreen from '../screens/OrdersScreen';
+import ReviewsScreen from '../screens/ReviewsScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
+import EarningsScreen from '../screens/EarningsScreen';
+import ContentLibraryScreen from '../screens/ContentLibraryScreen';
 import { Colors } from '../theme';
 
 const Stack = createNativeStackNavigator();
@@ -94,8 +102,8 @@ const MainTabs = () => {
         }}
       />
       <Tab.Screen 
-        name="Profile" 
-        component={ProfileScreen}
+        name="Orders" 
+        component={OrdersScreen}
         options={{
           tabBarIcon: ({ color, size, focused }) => (
             <View style={{ 
@@ -106,10 +114,48 @@ const MainTabs = () => {
               justifyContent: 'center',
               alignItems: 'center',
             }}>
-              <Icon name="person" size={focused ? 26 : 24} color={color} />
+              <Icon name="work" size={focused ? 26 : 24} color={color} />
             </View>
           ),
-          tabBarLabel: 'Profile',
+          tabBarLabel: 'Projects',
+        }}
+      />
+      <Tab.Screen 
+        name="Messages" 
+        component={MessagesScreen}
+        options={{
+          tabBarIcon: ({ color, size, focused }) => (
+            <View style={{ 
+              width: 44, 
+              height: 44, 
+              borderRadius: 12, 
+              backgroundColor: focused ? Colors.primary + '15' : 'transparent',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+              <Icon name="chat" size={focused ? 26 : 24} color={color} />
+            </View>
+          ),
+          tabBarLabel: 'Messages',
+        }}
+      />
+      <Tab.Screen 
+        name="Settings" 
+        component={SettingsScreen}
+        options={{
+          tabBarIcon: ({ color, size, focused }) => (
+            <View style={{ 
+              width: 44, 
+              height: 44, 
+              borderRadius: 12, 
+              backgroundColor: focused ? Colors.primary + '15' : 'transparent',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+              <Icon name="settings" size={focused ? 26 : 24} color={color} />
+            </View>
+          ),
+          tabBarLabel: 'Settings',
         }}
       />
     </Tab.Navigator>
@@ -138,6 +184,54 @@ const MainNavigator = () => {
         options={{ 
           headerShown: true,
           title: 'Product Details'
+        }}
+      />
+      <Stack.Screen 
+        name="ComponentsShowcase" 
+        component={ComponentsShowcaseScreen}
+        options={{ 
+          headerShown: false,
+          title: 'Components Showcase'
+        }}
+      />
+      <Stack.Screen 
+        name="Settings" 
+        component={SettingsScreen}
+        options={{ 
+          headerShown: false,
+          title: 'Settings'
+        }}
+      />
+      <Stack.Screen 
+        name="Reviews" 
+        component={ReviewsScreen}
+        options={{ 
+          headerShown: false,
+          title: 'Reviews & Ratings'
+        }}
+      />
+      <Stack.Screen 
+        name="Notifications" 
+        component={NotificationsScreen}
+        options={{ 
+          headerShown: false,
+          title: 'Notifications'
+        }}
+      />
+      <Stack.Screen 
+        name="Earnings" 
+        component={EarningsScreen}
+        options={{ 
+          headerShown: false,
+          title: 'Earnings'
+        }}
+      />
+      <Stack.Screen 
+        name="ContentLibrary" 
+        component={ContentLibraryScreen}
+        options={{ 
+          headerShown: false,
+          title: 'Content Library'
         }}
       />
     </Stack.Navigator>
