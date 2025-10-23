@@ -278,61 +278,57 @@ const DashboardScreen: React.FC = () => {
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.greeting}>{getGreeting()}, {getFirstName()}! 👋</Text>
-          <Text style={styles.headerSubtitle}>Here's your creator dashboard</Text>
+          <Text style={styles.headerSubtitle}>Ready to create amazing content?</Text>
         </View>
       </View>
 
-      {/* Progress Tracker - Professional, consistent colors */}
-      {(stats.totalApplications > 0 || stats.approvedApplications > 0 || stats.completedCampaigns > 0) && (
-        <View style={styles.progressSection}>
-          <Text style={styles.progressTitle}>Your Creator Journey</Text>
-          <View style={styles.progressTracker}>
-            <View style={styles.progressStep}>
-              <View style={[styles.progressCircle, { backgroundColor: Colors.gray600 }]}>
-                <Text style={styles.progressValue}>{stats.totalApplications}</Text>
-              </View>
-              <Text style={styles.progressLabel}>Applied</Text>
+      {/* Quick Stats Cards */}
+      <View style={styles.statsContainer}>
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <View style={[styles.statIconContainer, { backgroundColor: '#EEF2FF' }]}>
+              <Icon name="assignment" size={20} color="#6366F1" />
             </View>
-            <View style={styles.progressLine} />
-            <View style={styles.progressStep}>
-              <View style={[styles.progressCircle, { backgroundColor: Colors.primary }]}>
-                <Text style={styles.progressValue}>{stats.approvedApplications}</Text>
-              </View>
-              <Text style={styles.progressLabel}>Approved</Text>
-            </View>
-            <View style={styles.progressLine} />
-            <View style={styles.progressStep}>
-              <View style={[styles.progressCircle, { backgroundColor: Colors.success }]}>
-                <Text style={styles.progressValue}>{stats.completedCampaigns}</Text>
-              </View>
-              <Text style={styles.progressLabel}>Completed</Text>
-            </View>
+            <Text style={styles.statValue}>{stats.totalApplications}</Text>
+            <Text style={styles.statLabel}>Total Applied</Text>
           </View>
-          
-          {/* Earnings Banner */}
-          {stats.totalEarnings > 0 && (
-            <View style={styles.earningsBanner}>
-              <View style={styles.earningsIcon}>
-                <Icon name="payments" size={24} color={Colors.success} />
-              </View>
-              <View style={styles.earningsInfo}>
-                <Text style={styles.earningsLabel}>Total Earnings</Text>
-                <Text style={styles.earningsValue}>${stats.totalEarnings.toFixed(2)}</Text>
-              </View>
-              <Icon name="arrow-forward" size={20} color={Colors.gray500} />
+          <View style={styles.statCard}>
+            <View style={[styles.statIconContainer, { backgroundColor: '#D1FAE5' }]}>
+              <Icon name="check-circle" size={20} color="#059669" />
             </View>
-          )}
+            <Text style={styles.statValue}>{stats.approvedApplications}</Text>
+            <Text style={styles.statLabel}>Approved</Text>
+          </View>
         </View>
-      )}
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <View style={[styles.statIconContainer, { backgroundColor: '#FEF3C7' }]}>
+              <Icon name="emoji-events" size={20} color="#D97706" />
+            </View>
+            <Text style={styles.statValue}>{stats.completedCampaigns}</Text>
+            <Text style={styles.statLabel}>Completed</Text>
+          </View>
+          <View style={styles.statCard}>
+            <View style={[styles.statIconContainer, { backgroundColor: '#ECFDF5' }]}>
+              <Icon name="payments" size={20} color="#059669" />
+            </View>
+            <Text style={styles.statValue}>${stats.totalEarnings.toFixed(0)}</Text>
+            <Text style={styles.statLabel}>Earnings</Text>
+          </View>
+        </View>
+      </View>
 
-      {/* Opportunity Spotlight - Featured Campaigns with ActionCards */}
+      {/* Opportunity Spotlight - Featured Campaigns */}
       {recentCampaigns.length > 0 && (
         <View style={styles.spotlightSection}>
           <View style={styles.spotlightHeader}>
             <View>
-              <Text style={styles.spotlightTitle}>🎯 Opportunities for You</Text>
-              <Text style={styles.spotlightSubtitle}>Campaigns matching your profile</Text>
+              <Text style={styles.spotlightTitle}>🎯 Featured Opportunities</Text>
+              <Text style={styles.spotlightSubtitle}>Campaigns perfect for you</Text>
             </View>
+            <TouchableOpacity onPress={() => (navigation as any).navigate('Campaigns')}>
+              <Text style={styles.viewAllText}>View All</Text>
+            </TouchableOpacity>
           </View>
           <ScrollView 
             horizontal 
@@ -340,16 +336,41 @@ const DashboardScreen: React.FC = () => {
             contentContainerStyle={styles.spotlightScroll}
           >
             {recentCampaigns.slice(0, 3).map((campaign) => (
-              <View key={campaign.id} style={styles.actionCardWrapper}>
-                <ActionCard
-                  icon="campaign"
-                  title={campaign.title || 'Untitled Campaign'}
-                  description={campaign.brands?.brand_name || 'Brand Partnership'}
-                  actionLabel="View Details"
-                  onPress={() => (navigation as any).navigate('CampaignDetails', { campaignId: campaign.id })}
-                  gradientColors={['#6366F1', '#8B5CF6']}
-                />
-              </View>
+              <TouchableOpacity
+                key={campaign.id}
+                style={styles.actionCardWrapper}
+                activeOpacity={0.9}
+                onPress={() => (navigation as any).navigate('CampaignDetails', { campaignId: campaign.id })}
+              >
+                <View style={styles.spotlightCard}>
+                  <View style={styles.spotlightCardHeader}>
+                    {campaign.brands?.logo_url ? (
+                      <FastImage
+                        source={{ uri: campaign.brands.logo_url }}
+                        style={styles.spotlightLogo}
+                        resizeMode={FastImage.resizeMode.cover}
+                      />
+                    ) : (
+                      <View style={styles.spotlightLogoPlaceholder}>
+                        <Icon name="business" size={24} color="#6366F1" />
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.spotlightCardTitle} numberOfLines={2}>
+                    {campaign.title}
+                  </Text>
+                  <Text style={styles.spotlightCardBrand} numberOfLines={1}>
+                    {campaign.brands?.brand_name || 'Brand Partnership'}
+                  </Text>
+                  <View style={styles.spotlightCardFooter}>
+                    <View style={styles.spotlightBadge}>
+                      <Icon name="auto-awesome" size={12} color="#6366F1" />
+                      <Text style={styles.spotlightBadgeText}>HOT</Text>
+                    </View>
+                    <Icon name="arrow-forward" size={16} color="#9CA3AF" />
+                  </View>
+                </View>
+              </TouchableOpacity>
             ))}
           </ScrollView>
         </View>
@@ -375,54 +396,6 @@ const DashboardScreen: React.FC = () => {
           </View>
         </View>
       )}
-
-      {/* Recent Campaigns Section */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recent Campaigns</Text>
-          <TouchableOpacity onPress={() => {/* Navigate to campaigns */}}>
-            <Text style={styles.viewAllText}>View All</Text>
-          </TouchableOpacity>
-        </View>
-        
-        {recentCampaigns.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Icon name="campaign" size={48} color={Colors.textSecondary} />
-            <Text style={styles.emptyStateText}>No Campaigns Yet</Text>
-            <Text style={styles.emptyStateSubtext}>
-              Check back later for new campaign opportunities.
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.campaignsList}>
-            {recentCampaigns.map(renderCampaignCard)}
-          </View>
-        )}
-      </View>
-
-      {/* Recent Applications Section */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>My Applications</Text>
-          <TouchableOpacity onPress={() => {/* Navigate to campaigns */}}>
-            <Text style={styles.viewAllText}>View All</Text>
-          </TouchableOpacity>
-        </View>
-        
-        {recentApplications.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Icon name="assignment" size={48} color={Colors.textSecondary} />
-            <Text style={styles.emptyStateText}>No Applications Yet</Text>
-            <Text style={styles.emptyStateSubtext}>
-              Start applying to campaigns to see your application status here.
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.applicationsList}>
-            {recentApplications.map(renderApplicationCard)}
-          </View>
-        )}
-      </View>
 
       <View style={{ height: 32 }} />
 
@@ -479,7 +452,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.xl * 1.5,
-    paddingBottom: Spacing.lg,
+    paddingBottom: Spacing.xl,
     backgroundColor: Colors.white,
   },
   welcomeText: {
@@ -494,87 +467,51 @@ const styles = StyleSheet.create({
     color: Colors.blueGray500,  // Brand black
     letterSpacing: -0.8,
   },
-  progressSection: {
-    backgroundColor: Colors.white,
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.xl,
-    marginTop: Spacing.sm,
+  statsContainer: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.lg,
+    backgroundColor: Colors.background,
+    gap: Spacing.sm,
   },
-  progressTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: Spacing.lg,
-  },
-  progressTracker: {
+  statsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.lg,
+    gap: Spacing.sm,
   },
-  progressStep: {
-    alignItems: 'center',
+  statCard: {
+    flex: 1,
+    backgroundColor: Colors.white,
+    padding: Spacing.lg,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  progressCircle: {
-    width: 64,
-    height: 64,
+  statIconContainer: {
+    width: 40,
+    height: 40,
     borderRadius: 4,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.sm,
   },
-  progressValue: {
+  statValue: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: '#111827',
     letterSpacing: -0.5,
+    marginBottom: 2,
   },
-  progressLabel: {
+  statLabel: {
     fontSize: 12,
     fontWeight: '600',
     color: '#6B7280',
   },
-  progressLine: {
-    flex: 1,
-    height: 2,
-    backgroundColor: '#E5E7EB',
-    marginHorizontal: Spacing.sm,
-  },
-  earningsBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ECFDF5',
-    padding: Spacing.lg,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#A7F3D0',
-  },
-  earningsIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 4,
-    backgroundColor: '#D1FAE5',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: Spacing.md,
-  },
-  earningsInfo: {
-    flex: 1,
-  },
-  earningsLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#059669',
-    marginBottom: 2,
-  },
-  earningsValue: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#047857',
-    letterSpacing: -0.5,
-  },
   spotlightSection: {
-    marginTop: Spacing.xl,
+    marginTop: Spacing.lg,
   },
   spotlightHeader: {
     flexDirection: 'row',
@@ -599,15 +536,20 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   actionCardWrapper: {
-    width: 280,
+    width: 240,
   },
   spotlightCard: {
-    width: 180,
+    width: '100%',
     backgroundColor: Colors.white,
     borderRadius: 4,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: Colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   spotlightCardHeader: {
     marginBottom: Spacing.md,
@@ -636,22 +578,26 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#6B7280',
     fontWeight: '500',
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  spotlightCardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   spotlightBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3E8FF',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    backgroundColor: '#EEF2FF',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
     borderRadius: 4,
-    alignSelf: 'flex-start',
     gap: 4,
   },
   spotlightBadgeText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#8B5CF6',
+    color: '#6366F1',
   },
   section: {
     marginTop: Spacing.xl,
