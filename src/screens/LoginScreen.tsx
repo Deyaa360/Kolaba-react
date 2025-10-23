@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   ScrollView,
@@ -14,6 +13,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Colors, Typography, Spacing, BorderRadius } from '../theme';
 import supabaseService from '../services/supabase';
+import { AnimatedButton, Toast } from '../components';
 
 interface LoginScreenProps {
   navigation: any;
@@ -24,18 +24,24 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'info' as any });
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      setToast({ visible: true, message: 'Please fill in all fields', type: 'warning' });
       return;
     }
 
     setLoading(true);
     try {
       await supabaseService.signIn(email, password);
+      setToast({ visible: true, message: 'Welcome back!', type: 'success' });
     } catch (error: any) {
-      Alert.alert('Login Failed', error.message || 'Invalid credentials');
+      setToast({ 
+        visible: true, 
+        message: error.message || 'Invalid credentials', 
+        type: 'error' 
+      });
     } finally {
       setLoading(false);
     }
@@ -44,14 +50,20 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Hero Section */}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent} 
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Hero Section - Improved */}
         <View style={styles.header}>
-          <View style={styles.iconContainer}>
-            <Icon name="campaign" size={48} color={Colors.primary} />
+          <View style={styles.logoContainer}>
+            <Icon name="campaign" size={56} color={Colors.primary} />
           </View>
           <Text style={styles.logo}>Kolaba</Text>
+          <Text style={styles.subtitle}>Creator Platform</Text>
           <Text style={styles.tagline}>Welcome back! Sign in to continue</Text>
         </View>
 
@@ -64,7 +76,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               <Icon name="email" size={20} color={Colors.textSecondary} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Email address"
+                placeholder="you@example.com"
                 placeholderTextColor={Colors.textTertiary}
                 value={email}
                 onChangeText={setEmail}
@@ -72,6 +84,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 autoCapitalize="none"
                 autoCorrect={false}
                 editable={!loading}
+                accessible={true}
+                accessibilityLabel="Email address input"
+                accessibilityHint="Enter your email address"
               />
             </View>
           </View>
@@ -83,17 +98,23 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               <Icon name="lock" size={20} color={Colors.textSecondary} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Password"
+                placeholder="Enter your password"
                 placeholderTextColor={Colors.textTertiary}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
                 editable={!loading}
+                accessible={true}
+                accessibilityLabel="Password input"
+                accessibilityHint="Enter your password"
               />
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
                 style={styles.eyeIcon}
+                accessible={true}
+                accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                accessibilityRole="button"
               >
                 <Icon
                   name={showPassword ? 'visibility' : 'visibility-off'}
@@ -105,24 +126,26 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           </View>
 
           {/* Forgot Password */}
-          <TouchableOpacity style={styles.forgotPassword}>
+          <TouchableOpacity 
+            style={styles.forgotPassword}
+            accessible={true}
+            accessibilityLabel="Forgot password"
+            accessibilityRole="button"
+          >
             <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
           </TouchableOpacity>
 
-          {/* Login Button */}
-          <TouchableOpacity
-            style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+          {/* Login Button - Using AnimatedButton */}
+          <AnimatedButton
+            title="Sign In"
             onPress={handleLogin}
-            disabled={loading}>
-            {loading ? (
-              <ActivityIndicator color={Colors.white} />
-            ) : (
-              <View style={styles.buttonContent}>
-                <Text style={styles.loginButtonText}>Sign In</Text>
-                <Icon name="arrow-forward" size={20} color={Colors.white} />
-              </View>
-            )}
-          </TouchableOpacity>
+            variant="primary"
+            size="large"
+            loading={loading}
+            disabled={loading}
+            fullWidth={true}
+            style={styles.loginButton}
+          />
 
           {/* Divider */}
           <View style={styles.divider}>
@@ -131,18 +154,26 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             <View style={styles.dividerLine} />
           </View>
 
-          {/* Sign Up Button */}
-          <TouchableOpacity
-            style={styles.signupButton}
+          {/* Sign Up Button - Using AnimatedButton */}
+          <AnimatedButton
+            title="Create Account"
             onPress={() => navigation.navigate('Signup')}
-            disabled={loading}>
-            <View style={styles.buttonContent}>
-              <Icon name="person-add" size={20} color={Colors.blueGray300} />
-              <Text style={styles.signupButtonText}>Create Account</Text>
-            </View>
-          </TouchableOpacity>
+            variant="outline"
+            size="large"
+            disabled={loading}
+            fullWidth={true}
+            icon={<Icon name="person-add" size={20} color={Colors.primary} />}
+          />
         </View>
       </ScrollView>
+      
+      {/* Toast Notification */}
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={() => setToast({ ...toast, visible: false })}
+      />
     </KeyboardAvoidingView>
   );
 };
@@ -156,30 +187,36 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.xl,
+    paddingVertical: Spacing['2xl'],
   },
   header: {
     alignItems: 'center',
-    marginBottom: Spacing['2xl'],
+    marginBottom: Spacing['3xl'],
   },
-  iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: Colors.turquoise50,  // Very subtle turquoise tint
+  logoContainer: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: Colors.white,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
   },
   logo: {
-    fontSize: Typography.fontSize['3xl'],
-    fontWeight: Typography.fontWeight.bold,
-    color: Colors.black,  // Brand black for serious look
+    ...Typography.title1,
+    color: Colors.black,
+    marginBottom: Spacing.xxs,
+  },
+  subtitle: {
+    ...Typography.callout,
+    color: Colors.textSecondary,
     marginBottom: Spacing.xs,
   },
   tagline: {
-    fontSize: Typography.fontSize.base,
-    color: Colors.textSecondary,
+    ...Typography.subheadline,
+    color: Colors.textTertiary,
     textAlign: 'center',
   },
   form: {
@@ -189,60 +226,47 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   label: {
-    fontSize: Typography.fontSize.sm,
+    ...Typography.footnote,
     fontWeight: Typography.fontWeight.semibold,
     color: Colors.text,
     marginBottom: Spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.white,
     borderRadius: BorderRadius.lg,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: Colors.border,
     paddingHorizontal: Spacing.md,
+    minHeight: 50,
   },
   inputIcon: {
     marginRight: Spacing.sm,
   },
   input: {
     flex: 1,
-    paddingVertical: Spacing.md,
-    fontSize: Typography.fontSize.base,
+    ...Typography.body,
     color: Colors.text,
   },
   eyeIcon: {
-    padding: Spacing.xs,
+    padding: Spacing.sm,
+    marginLeft: Spacing.xs,
   },
   forgotPassword: {
-    alignItems: 'flex-end',
-    marginBottom: Spacing.lg,
+    alignSelf: 'flex-end',
+    marginBottom: Spacing.xl,
+    padding: Spacing.xs,
   },
   forgotPasswordText: {
-    color: Colors.primary,  // Turquoise link
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.medium,
+    ...Typography.footnote,
+    color: Colors.primary,
+    fontWeight: Typography.fontWeight.semibold,
   },
   loginButton: {
-    backgroundColor: Colors.button,  // Primary button = turquoise
-    borderRadius: BorderRadius.lg,
-    paddingVertical: Spacing.md,
-    alignItems: 'center',
-    marginTop: Spacing.sm,
-  },
-  loginButtonDisabled: {
-    opacity: 0.5,
-  },
-  loginButtonText: {
-    color: Colors.white,
-    fontSize: Typography.fontSize.lg,
-    fontWeight: Typography.fontWeight.bold,
-  },
-  buttonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
+    marginBottom: Spacing.lg,
   },
   divider: {
     flexDirection: 'row',
@@ -255,23 +279,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.border,
   },
   dividerText: {
+    ...Typography.footnote,
     marginHorizontal: Spacing.md,
     color: Colors.textSecondary,
-    fontSize: Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.medium,
-  },
-  signupButton: {
-    borderWidth: 2,
-    borderColor: Colors.border,  // Gray border for secondary action
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.lg,
-    paddingVertical: Spacing.md,
-    alignItems: 'center',
-  },
-  signupButtonText: {
-    color: Colors.blueGray300,  // Blue-gray text for secondary action
-    fontSize: Typography.fontSize.lg,
-    fontWeight: Typography.fontWeight.bold,
   },
 });
 

@@ -5,14 +5,16 @@ import {
   StyleSheet,
   ScrollView,
   RefreshControl,
-  TouchableOpacity,
   ActivityIndicator,
+  TouchableOpacity,
   Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import FastImage from 'react-native-fast-image';
 import supabaseService from '../services/supabase';
 import { Colors, Typography, Spacing, BorderRadius } from '../theme';
+import { AnimatedCard, AnimatedButton, SkeletonStatCard as SkeletonStatCardNew, SkeletonListItem as SkeletonListItemNew, EmptyState, ToastNotification, ActionCard } from '../components';
 
 interface Stats {
   totalApplications: number;
@@ -56,6 +58,27 @@ const DashboardScreen: React.FC = () => {
   const [recentCampaigns, setRecentCampaigns] = useState<Campaign[]>([]);
   const [recentApplications, setRecentApplications] = useState<Application[]>([]);
   const [userName, setUserName] = useState('Creator');
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success'|'error'|'info'|'warning'>('info');
+
+  const showToast = (message: string, type: 'success'|'error'|'info'|'warning') => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
+
+  // Helper function for dynamic greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  };
+
+  const getFirstName = () => {
+    return userName.split(' ')[0];
+  };
 
   useEffect(() => {
     loadDashboardData();
@@ -94,6 +117,7 @@ const DashboardScreen: React.FC = () => {
 
     } catch (error) {
       console.error('Error loading dashboard:', error);
+      showToast('Failed to load dashboard data', 'error');
       setStats({
         totalApplications: 0,
         approvedApplications: 0,
@@ -222,8 +246,13 @@ const DashboardScreen: React.FC = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-        <Text style={styles.loadingText}>Loading dashboard...</Text>
+        <View style={styles.statsGrid}>
+          <SkeletonStatCardNew />
+          <SkeletonStatCardNew />
+        </View>
+        <SkeletonListItemNew />
+        <SkeletonListItemNew />
+        <SkeletonListItemNew />
       </View>
     );
   }
@@ -234,19 +263,22 @@ const DashboardScreen: React.FC = () => {
   return (
     <ScrollView
       style={styles.container}
+      contentContainerStyle={styles.scrollContent}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
           colors={[Colors.primary]}
+          tintColor={Colors.primary}
         />
       }
+      showsVerticalScrollIndicator={false}
     >
-      {/* Modern Header */}
+      {/* Modern Header with Dynamic Greeting */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.welcomeText}>Welcome back,</Text>
-          <Text style={styles.userName}>{userName}</Text>
+        <View style={styles.headerContent}>
+          <Text style={styles.greeting}>{getGreeting()}, {getFirstName()}! 👋</Text>
+          <Text style={styles.headerSubtitle}>Here's your creator dashboard</Text>
         </View>
       </View>
 
@@ -293,7 +325,7 @@ const DashboardScreen: React.FC = () => {
         </View>
       )}
 
-      {/* Opportunity Spotlight - Featured Campaigns */}
+      {/* Opportunity Spotlight - Featured Campaigns with ActionCards */}
       {recentCampaigns.length > 0 && (
         <View style={styles.spotlightSection}>
           <View style={styles.spotlightHeader}>
@@ -308,40 +340,16 @@ const DashboardScreen: React.FC = () => {
             contentContainerStyle={styles.spotlightScroll}
           >
             {recentCampaigns.slice(0, 3).map((campaign) => (
-              <TouchableOpacity
-                key={campaign.id}
-                style={styles.spotlightCard}
-                onPress={() => (navigation as any).navigate('CampaignDetails', { campaignId: campaign.id })}
-                activeOpacity={0.9}
-              >
-                <View style={styles.spotlightCardHeader}>
-                  {campaign.brands?.logo_url ? (
-                    <Image
-                      source={{ uri: campaign.brands.logo_url }}
-                      style={styles.spotlightLogo}
-                      resizeMode="cover"
-                    />
-                  ) : (
-                    <View style={styles.spotlightLogoPlaceholder}>
-                      <Icon name="business" size={24} color="#6366F1" />
-                    </View>
-                  )}
-                </View>
-                <Text style={styles.spotlightCardTitle} numberOfLines={2}>
-                  {campaign.title}
-                </Text>
-                <Text style={styles.spotlightCardBrand} numberOfLines={1}>
-                  {campaign.brands?.brand_name || 'Brand'}
-                </Text>
-                {campaign.campaign_content_packages && campaign.campaign_content_packages.length > 0 && (
-                  <View style={styles.spotlightBadge}>
-                    <Icon name="video-library" size={14} color="#8B5CF6" />
-                    <Text style={styles.spotlightBadgeText}>
-                      {campaign.campaign_content_packages.length} Package{campaign.campaign_content_packages.length > 1 ? 's' : ''}
-                    </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
+              <View key={campaign.id} style={styles.actionCardWrapper}>
+                <ActionCard
+                  icon="campaign"
+                  title={campaign.title || 'Untitled Campaign'}
+                  description={campaign.brands?.brand_name || 'Brand Partnership'}
+                  actionLabel="View Details"
+                  onPress={() => (navigation as any).navigate('CampaignDetails', { campaignId: campaign.id })}
+                  gradientColors={['#6366F1', '#8B5CF6']}
+                />
+              </View>
             ))}
           </ScrollView>
         </View>
@@ -417,6 +425,14 @@ const DashboardScreen: React.FC = () => {
       </View>
 
       <View style={{ height: 32 }} />
+
+      {/* Toast Notification */}
+      <ToastNotification
+        visible={toastVisible}
+        message={toastMessage}
+        type={toastType}
+        onHide={() => setToastVisible(false)}
+      />
     </ScrollView>
   );
 };
@@ -436,6 +452,26 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
     fontSize: 14,
     color: Colors.textTertiary,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  scrollContent: {
+    paddingBottom: Spacing['3xl'],
+  },
+  headerContent: {
+    gap: Spacing.xs,
+  },
+  greeting: {
+    ...Typography.title2,
+    color: Colors.text,
+  },
+  headerSubtitle: {
+    ...Typography.subheadline,
+    color: Colors.textSecondary,
   },
   header: {
     flexDirection: 'row',
@@ -482,7 +518,7 @@ const styles = StyleSheet.create({
   progressCircle: {
     width: 64,
     height: 64,
-    borderRadius: 32,
+    borderRadius: 4,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.sm,
@@ -509,14 +545,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#ECFDF5',
     padding: Spacing.lg,
-    borderRadius: 14,
+    borderRadius: 4,
     borderWidth: 1,
     borderColor: '#A7F3D0',
   },
   earningsIcon: {
     width: 48,
     height: 48,
-    borderRadius: 12,
+    borderRadius: 4,
     backgroundColor: '#D1FAE5',
     justifyContent: 'center',
     alignItems: 'center',
@@ -562,10 +598,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     gap: Spacing.md,
   },
+  actionCardWrapper: {
+    width: 280,
+  },
   spotlightCard: {
     width: 180,
     backgroundColor: Colors.white,
-    borderRadius: 16,
+    borderRadius: 4,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: Colors.border,
@@ -576,12 +615,12 @@ const styles = StyleSheet.create({
   spotlightLogo: {
     width: 56,
     height: 56,
-    borderRadius: 14,
+    borderRadius: 4,
   },
   spotlightLogoPlaceholder: {
     width: 56,
     height: 56,
-    borderRadius: 14,
+    borderRadius: 4,
     backgroundColor: '#EEF2FF',
     justifyContent: 'center',
     alignItems: 'center',
@@ -605,7 +644,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3E8FF',
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 4,
     alignSelf: 'flex-start',
     gap: 4,
   },
@@ -645,11 +684,16 @@ const styles = StyleSheet.create({
   },
   campaignCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: 4,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#E5E7EB',
     marginBottom: Spacing.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
   campaignCardContent: {
     padding: Spacing.md,
@@ -660,12 +704,12 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   brandLogoWrapper: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: 48,
+    height: 48,
+    borderRadius: 4,
     overflow: 'hidden',
-    backgroundColor: '#F3F4F6',
-    borderWidth: 1,
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1.5,
     borderColor: '#E5E7EB',
   },
   brandLogo: {
@@ -703,11 +747,16 @@ const styles = StyleSheet.create({
   },
   applicationCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: 4,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: '#E5E7EB',
     marginBottom: Spacing.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
   applicationHeader: {
     flexDirection: 'row',
@@ -716,7 +765,7 @@ const styles = StyleSheet.create({
   brandLogoContainer: {
     width: 44,
     height: 44,
-    borderRadius: 12,
+    borderRadius: 4,
     backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
@@ -739,7 +788,7 @@ const styles = StyleSheet.create({
   statusBadge: {
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 8,
+    borderRadius: 4,
     marginLeft: Spacing.sm,
   },
   statusText: {
@@ -748,7 +797,7 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: 4,
     padding: Spacing.xl,
     alignItems: 'center',
     borderWidth: 1,

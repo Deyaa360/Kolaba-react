@@ -6,17 +6,18 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  Image,
   Alert,
   RefreshControl,
   Linking,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import FastImage from 'react-native-fast-image';
+import LinearGradient from 'react-native-linear-gradient';
 import RenderHtml from 'react-native-render-html';
 import { useWindowDimensions } from 'react-native';
 import supabaseService from '../services/supabase';
 import { Colors, Typography, Spacing, BorderRadius } from '../theme';
-import { DetailChip } from '../components';
+import { DetailChip, AnimatedButton, SkeletonCampaignDetails, ToastNotification } from '../components';
 
 const CampaignDetailsScreen = ({ route, navigation }: any) => {
   const { campaignId } = route.params;
@@ -27,6 +28,17 @@ const CampaignDetailsScreen = ({ route, navigation }: any) => {
   const [applying, setApplying] = useState(false);
   const [expandedPackages, setExpandedPackages] = useState<Set<number>>(new Set());
   const { width } = useWindowDimensions();
+  
+  // Toast notification state
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info' | 'warning'>('info');
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning') => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
 
   useEffect(() => {
     loadCampaignDetails();
@@ -38,7 +50,7 @@ const CampaignDetailsScreen = ({ route, navigation }: any) => {
       const campaignData = await supabaseService.getCampaignById(campaignId);
       
       if (!campaignData) {
-        Alert.alert('Error', 'Campaign not found');
+        showToast('Campaign not found', 'error');
         navigation.goBack();
         return;
       }
@@ -48,7 +60,7 @@ const CampaignDetailsScreen = ({ route, navigation }: any) => {
       setHasApplied(appliedStatus);
     } catch (error) {
       console.error('Error loading campaign details:', error);
-      Alert.alert('Error', 'Failed to load campaign details');
+      showToast('Failed to load campaign details', 'error');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -67,7 +79,7 @@ const CampaignDetailsScreen = ({ route, navigation }: any) => {
           text: 'Submit',
           onPress: async (message) => {
             if (!message || message.trim().length === 0) {
-              Alert.alert('Error', 'Please enter a message');
+              showToast('Please enter a message', 'warning');
               return;
             }
 
@@ -75,10 +87,10 @@ const CampaignDetailsScreen = ({ route, navigation }: any) => {
               setApplying(true);
               await supabaseService.submitApplication(campaignId, message.trim());
               setHasApplied(true);
-              Alert.alert('Success', 'Application submitted successfully!');
+              showToast('Application submitted successfully! 🎉', 'success');
             } catch (error) {
               console.error('Error submitting application:', error);
-              Alert.alert('Error', 'Failed to submit application');
+              showToast('Failed to submit application', 'error');
             } finally {
               setApplying(false);
             }
@@ -111,6 +123,46 @@ const CampaignDetailsScreen = ({ route, navigation }: any) => {
       }
       return newSet;
     });
+  };
+
+  const getObjectiveLabel = (objective: string) => {
+    const labels: { [key: string]: string } = {
+      'paid_media_campaigns': 'Paid Media',
+      'organic_social_channels': 'Organic Social',
+      'ecommerce_web_pages': 'E-commerce',
+      'creative_asset_production': 'Creative Assets',
+    };
+    return labels[objective] || objective.split('_').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  };
+
+  const getObjectiveIcon = (objective: string) => {
+    const icons: { [key: string]: string } = {
+      'paid_media_campaigns': 'campaign',
+      'organic_social_channels': 'share',
+      'ecommerce_web_pages': 'shopping-cart',
+      'creative_asset_production': 'palette',
+    };
+    return icons[objective] || 'flag';
+  };
+
+  const getObjectiveBackgroundColor = (objective: string) => {
+    const colors: { [key: string]: string } = {
+      'paid_media_campaigns': '#DBEAFE',
+      'organic_social_channels': '#D1FAE5',
+      'ecommerce_web_pages': '#FCE7F3',
+      'creative_asset_production': '#FCE7F3',
+    };
+    return colors[objective] || '#F3F4F6';
+  };
+
+  const getObjectiveTextColor = (objective: string) => {
+    const colors: { [key: string]: string } = {
+      'paid_media_campaigns': '#2563EB',
+      'organic_social_channels': '#059669',
+      'ecommerce_web_pages': '#DB2777',
+      'creative_asset_production': '#EC4899',
+    };
+    return colors[objective] || '#6B7280';
   };
 
   const getPackageTypeColor = (contentType: string) => {
@@ -245,10 +297,9 @@ const CampaignDetailsScreen = ({ route, navigation }: any) => {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-        <Text style={styles.loadingText}>Loading campaign details...</Text>
-      </View>
+      <ScrollView style={styles.container} contentContainerStyle={{padding: Spacing.md}}>
+        <SkeletonCampaignDetails />
+      </ScrollView>
     );
   }
 
@@ -285,11 +336,14 @@ const CampaignDetailsScreen = ({ route, navigation }: any) => {
           <View style={styles.brandInfoRow}>
             <View style={styles.brandLogoSmall}>
               {brand?.logo_url ? (
-                <Image 
-                  source={{ uri: brand.logo_url }} 
+                <FastImage 
+                  source={{ 
+                    uri: brand.logo_url,
+                    priority: FastImage.priority.normal,
+                    cache: FastImage.cacheControl.immutable,
+                  }} 
                   style={styles.brandLogoImage} 
-                  resizeMode="cover"
-                  onError={() => console.log('Failed to load brand logo')}
+                  resizeMode={FastImage.resizeMode.cover}
                 />
               ) : (
                 <Icon name="business" size={24} color={Colors.primary} />
@@ -308,16 +362,19 @@ const CampaignDetailsScreen = ({ route, navigation }: any) => {
           <View style={styles.badgesRow}>
             {campaign.objective && (
               <DetailChip 
-                label={campaign.objective.split('_').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                label={getObjectiveLabel(campaign.objective)}
+                icon={getObjectiveIcon(campaign.objective)}
+                backgroundColor={getObjectiveBackgroundColor(campaign.objective)}
+                textColor={getObjectiveTextColor(campaign.objective)}
                 size="small"
               />
             )}
             {campaign.product_shipping === 'required' && (
               <DetailChip 
-                label="Products Included"
+                label="Products"
                 icon="local-shipping"
-                backgroundColor={Colors.success + '20'}
-                textColor={Colors.success}
+                backgroundColor="#D1FAE5"
+                textColor="#059669"
                 size="small"
               />
             )}
@@ -325,31 +382,31 @@ const CampaignDetailsScreen = ({ route, navigation }: any) => {
               <DetailChip 
                 label="Content Only"
                 icon="edit"
-                backgroundColor={Colors.textSecondary + '20'}
-                textColor={Colors.textSecondary}
+                backgroundColor="#FEF3C7"
+                textColor="#F59E0B"
                 size="small"
               />
             )}
           </View>
         </View>
 
-        {/* Content Brief */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Icon name="description" size={20} color={Colors.primary} />
-            <Text style={styles.sectionTitle}>Content Brief</Text>
+        {/* Content Brief - Full Width No Borders */}
+        <View style={styles.sectionNoBorder}>
+          <View style={styles.sectionHeaderNoBorder}>
+            <Icon name="description" size={22} color={Colors.primary} />
+            <Text style={styles.sectionTitleNoBorder}>Content Brief</Text>
           </View>
-          <View style={styles.sectionContent}>
+          <View style={styles.sectionContentNoBorder}>
             {renderRichText(campaign.content_brief || campaign.description || 'No content brief available.')}
           </View>
         </View>
 
-        {/* Content Packages */}
+        {/* Content Packages - Full Width */}
         {contentPackages.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Icon name="inventory" size={20} color={Colors.primary} />
-              <Text style={styles.sectionTitle}>
+          <View style={styles.packagesSection}>
+            <View style={styles.packagesSectionHeader}>
+              <Icon name="inventory" size={22} color={Colors.primary} />
+              <Text style={styles.packagesSectionTitle}>
                 Content Packages ({contentPackages.length})
               </Text>
             </View>
@@ -361,22 +418,32 @@ const CampaignDetailsScreen = ({ route, navigation }: any) => {
               const quantity = pkg.quantity_needed || 1;
 
               return (
-                <View key={index} style={styles.packageItem}>
+                <View key={index} style={styles.packageItemFullWidth}>
                   <TouchableOpacity
-                    style={styles.packageHeaderButton}
+                    style={[
+                      styles.packageHeaderButtonFullWidth,
+                      { borderLeftWidth: 4, borderLeftColor: packageColor }
+                    ]}
                     onPress={() => togglePackage(index)}
                     activeOpacity={0.7}
                   >
-                    <View style={[styles.packageIconContainer, { backgroundColor: packageColor + '20' }]}>
+                    <View style={[styles.packageIconContainer, { backgroundColor: packageColor + '15' }]}>
                       <Icon name={packageIcon} size={22} color={packageColor} />
                     </View>
                     <View style={styles.packageTitleContainer}>
                       <Text style={styles.packageTitle}>
                         {pkg.title || pkg.content_type?.split('_').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
                       </Text>
-                      <Text style={styles.packageSubtitle}>
-                        Quantity: {quantity}
-                      </Text>
+                      <View style={styles.packageSubtitleRow}>
+                        <View style={[styles.miniTypeBadge, { backgroundColor: packageColor + '15' }]}>
+                          <Text style={[styles.miniTypeBadgeText, { color: packageColor }]}>
+                            {getContentTypeLabel(pkg.content_type)}
+                          </Text>
+                        </View>
+                        <Text style={styles.packageQuantity}>
+                          • Qty: {quantity}
+                        </Text>
+                      </View>
                     </View>
                     <Icon 
                       name={isExpanded ? 'expand-less' : 'expand-more'} 
@@ -386,7 +453,7 @@ const CampaignDetailsScreen = ({ route, navigation }: any) => {
                   </TouchableOpacity>
 
                   {isExpanded && (
-                    <View style={styles.packageExpandedContent}>
+                    <View style={styles.packageExpandedContentFullWidth}>
                       <View style={styles.divider} />
                       
                       {/* Content Type Badge */}
@@ -459,11 +526,14 @@ const CampaignDetailsScreen = ({ route, navigation }: any) => {
                                     activeOpacity={0.7}
                                   >
                                     {product.photo_url ? (
-                                      <Image 
-                                        source={{ uri: product.photo_url }} 
+                                      <FastImage 
+                                        source={{ 
+                                          uri: product.photo_url,
+                                          priority: FastImage.priority.normal,
+                                          cache: FastImage.cacheControl.immutable,
+                                        }} 
                                         style={styles.productImageSmall} 
-                                        resizeMode="cover"
-                                        onError={() => console.log('Failed to load product image')}
+                                        resizeMode={FastImage.resizeMode.cover}
                                       />
                                     ) : (
                                       <View style={styles.productImagePlaceholderSmall}>
@@ -547,13 +617,13 @@ const CampaignDetailsScreen = ({ route, navigation }: any) => {
           </View>
         )}
 
-        {/* About the Brand */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Icon name="business" size={20} color={Colors.primary} />
-            <Text style={styles.sectionTitle}>About the Brand</Text>
+        {/* About the Brand - Full Width No Borders */}
+        <View style={styles.sectionNoBorder}>
+          <View style={styles.sectionHeaderNoBorder}>
+            <Icon name="business" size={22} color={Colors.primary} />
+            <Text style={styles.sectionTitleNoBorder}>About the Brand</Text>
           </View>
-          <View style={styles.sectionContent}>
+          <View style={styles.sectionContentNoBorder}>
             {brand?.description && (
               <Text style={styles.bodyText}>{brand.description}</Text>
             )}
@@ -583,27 +653,24 @@ const CampaignDetailsScreen = ({ route, navigation }: any) => {
 
       {/* Apply Button */}
       <View style={styles.footer}>
-        <TouchableOpacity
-          style={[styles.applyButton, hasApplied && styles.appliedButton]}
+        <AnimatedButton
+          title={hasApplied ? 'Application Submitted' : 'Apply to Campaign'}
+          variant={hasApplied ? "secondary" : "primary"}
+          size="large"
+          fullWidth
           onPress={handleApply}
           disabled={hasApplied || applying}
-        >
-          {applying ? (
-            <ActivityIndicator color={Colors.white} />
-          ) : (
-            <>
-              <Icon 
-                name={hasApplied ? 'check-circle' : 'send'} 
-                size={20} 
-                color={Colors.white} 
-              />
-              <Text style={styles.applyButtonText}>
-                {hasApplied ? 'Application Submitted' : 'Apply to Campaign'}
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
+          loading={applying}
+        />
       </View>
+
+      {/* Toast Notification */}
+      <ToastNotification
+        visible={toastVisible}
+        message={toastMessage}
+        type={toastType}
+        onHide={() => setToastVisible(false)}
+      />
     </View>
   );
 };
@@ -675,17 +742,15 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.xl,
-    paddingBottom: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    paddingBottom: Spacing.xl,
   },
   campaignTitle: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: '800',
     color: '#111827',
     marginBottom: Spacing.lg,
-    lineHeight: 30,
-    letterSpacing: -0.5,
+    lineHeight: 32,
+    letterSpacing: -0.6,
   },
   brandInfoRow: {
     flexDirection: 'row',
@@ -695,7 +760,7 @@ const styles = StyleSheet.create({
   brandLogoSmall: {
     width: 52,
     height: 52,
-    borderRadius: 13,
+    borderRadius: 4,
     backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
@@ -729,8 +794,16 @@ const styles = StyleSheet.create({
   },
   section: {
     backgroundColor: Colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    marginHorizontal: Spacing.lg,
+    marginBottom: Spacing.lg,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -740,9 +813,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
   },
   sectionTitle: {
-    fontSize: 15,
+    fontSize: 17,
     fontWeight: '700',
-    color: Colors.blueGray500,
+    color: '#111827',
     marginLeft: Spacing.sm,
     letterSpacing: -0.3,
   },
@@ -751,21 +824,82 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     paddingBottom: Spacing.lg,
   },
-  packageItem: {
+  // Full-width sections (no borders/containers like packages)
+  sectionNoBorder: {
+    backgroundColor: Colors.white,
+    marginTop: Spacing.md,
+    paddingVertical: Spacing.xl,
+  },
+  sectionHeaderNoBorder: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.md,
+  },
+  sectionTitleNoBorder: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111827',
+    marginLeft: Spacing.sm,
+    letterSpacing: -0.4,
+  },
+  sectionContentNoBorder: {
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.sm,
+  },
+  // Full-width packages section (no container/borders)
+  packagesSection: {
+    backgroundColor: '#F9FAFB',
+    marginTop: Spacing.md,
+    paddingVertical: Spacing.xl,
+  },
+  packagesSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.md,
+  },
+  packagesSectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111827',
+    marginLeft: Spacing.sm,
+    letterSpacing: -0.4,
+  },
+  packageItemFullWidth: {
     backgroundColor: Colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: '#E5E7EB',
   },
-  packageHeaderButton: {
+  packageHeaderButtonFullWidth: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.lg,
   },
+  packageExpandedContentFullWidth: {
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.xl,
+    backgroundColor: '#F9FAFB',
+  },
+  packageItem: {
+    backgroundColor: Colors.white,
+    marginBottom: Spacing.sm,
+    borderRadius: 4,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  packageHeaderButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.lg,
+  },
   packageIconContainer: {
     width: 48,
     height: 48,
-    borderRadius: 12,
+    borderRadius: 4,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -777,7 +911,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#111827',
-    marginBottom: 4,
+    marginBottom: 6,
+  },
+  packageSubtitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  miniTypeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
+  },
+  miniTypeBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+  },
+  packageQuantity: {
+    fontSize: 13,
+    color: '#6B7280',
+    fontWeight: '500',
   },
   packageSubtitle: {
     fontSize: 13,

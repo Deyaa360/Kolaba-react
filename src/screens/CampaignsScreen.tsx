@@ -1,23 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   RefreshControl,
   TouchableOpacity,
   TextInput,
   FlatList,
   ActivityIndicator,
-  Image,
   LogBox,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import FastImage from 'react-native-fast-image';
 import supabaseService from '../services/supabase';
 import { Colors, Typography, Spacing, BorderRadius } from '../theme';
-import FilterModal from '../components/FilterModal';
-import DetailChip from '../components/DetailChip';
+import { FilterModal, AnimatedCard, SkeletonCampaignCard as SkeletonCampaignCardNew, EmptyState } from '../components';
 
 // Suppress image loading warnings
 LogBox.ignoreLogs([
@@ -61,10 +64,19 @@ const CampaignsScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
+  // Animated tab indicator
+  const tabIndicatorPosition = useSharedValue(0);
+  
+  // Collapsible header animation
+  const scrollY = useSharedValue(0);
+  const headerHeight = useSharedValue(0);
+  const lastScrollY = useSharedValue(0);
+  const headerTranslateY = useSharedValue(0);
+  
   // Filter states
   const [filterModalVisible, setFilterModalVisible] = useState(false);
-  const [selectedObjective, setSelectedObjective] = useState<string | null>(null);
-  const [selectedShipping, setSelectedShipping] = useState<string | null>(null);
+  const [selectedObjectives, setSelectedObjectives] = useState<string[]>([]);
+  const [selectedShipping, setSelectedShipping] = useState<string[]>([]);
   
   // Data states
   const [availableCampaigns, setAvailableCampaigns] = useState<Campaign[]>([]);
@@ -107,21 +119,72 @@ const CampaignsScreen: React.FC = () => {
     loadCampaignsData();
   };
 
-  const renderTabButton = (tab: TabType, label: string, icon: string) => (
-    <TouchableOpacity
-      style={[styles.tabButton, activeTab === tab && styles.tabButtonActive]}
-      onPress={() => setActiveTab(tab)}
-    >
-      <Icon 
-        name={icon} 
-        size={20} 
-        color={activeTab === tab ? Colors.primary : Colors.textSecondary} 
-      />
-      <Text style={[styles.tabLabel, activeTab === tab && styles.tabLabelActive]}>
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
+  const renderTabButton = (tab: TabType, label: string, icon: string, index: number) => {
+    const isActive = activeTab === tab;
+    
+    const handleTabPress = () => {
+      setActiveTab(tab);
+      // Animate indicator to new position
+      tabIndicatorPosition.value = withSpring(index, {
+        damping: 15,
+        stiffness: 150,
+      });
+    };
+
+    return (
+      <TouchableOpacity
+        style={[styles.tabButton, isActive && styles.tabButtonActive]}
+        onPress={handleTabPress}
+        activeOpacity={0.7}
+      >
+        <Icon 
+          name={icon} 
+          size={20} 
+          color={isActive ? Colors.primary : Colors.textSecondary} 
+        />
+        <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
+          {label}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
+
+  const tabIndicatorStyle = useAnimatedStyle(() => {
+    const tabWidth = 100; // Approximate width per tab
+    return {
+      transform: [{ translateX: tabIndicatorPosition.value * tabWidth }],
+    };
+  });
+
+  // Animated header style for collapsing/expanding
+  const animatedHeaderStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateY: headerTranslateY.value }],
+    };
+  });
+
+  // Handle scroll for collapsible header
+  const handleScroll = (event: any) => {
+    'worklet';
+    const currentScrollY = event.nativeEvent.contentOffset.y;
+    const delta = currentScrollY - lastScrollY.value;
+    
+    // Don't hide header at the very top
+    if (currentScrollY <= 0) {
+      headerTranslateY.value = withSpring(0, { damping: 20, stiffness: 90 });
+    }
+    // Scrolling down - hide header
+    else if (delta > 0 && currentScrollY > 50) {
+      headerTranslateY.value = withSpring(-headerHeight.value, { damping: 20, stiffness: 90 });
+    }
+    // Scrolling up - show header
+    else if (delta < 0) {
+      headerTranslateY.value = withSpring(0, { damping: 20, stiffness: 90 });
+    }
+    
+    lastScrollY.value = currentScrollY;
+    scrollY.value = currentScrollY;
+  };
 
   const getObjectiveLabel = (objective: string) => {
     const labels: { [key: string]: string } = {
@@ -129,20 +192,16 @@ const CampaignsScreen: React.FC = () => {
       'organic_social_channels': 'Organic Social',
       'ecommerce_web_pages': 'E-commerce',
       'creative_asset_production': 'Creative Assets',
-      'brand_awareness': 'Brand Awareness',
-      'product_launch': 'Product Launch',
     };
     return labels[objective] || objective;
   };
 
   const getObjectiveColors = (objective: string) => {
     const colors: { [key: string]: { bg: string; text: string; icon: string } } = {
-      'paid_media_campaigns': { bg: Colors.yellow50, text: Colors.yellow500, icon: 'campaign' },
-      'organic_social_channels': { bg: Colors.turquoise50, text: Colors.turquoise500, icon: 'share' },
-      'ecommerce_web_pages': { bg: Colors.yellow50, text: Colors.yellow400, icon: 'shopping-cart' },
-      'creative_asset_production': { bg: Colors.pink50, text: Colors.pink400, icon: 'palette' },
-      'brand_awareness': { bg: Colors.turquoise50, text: Colors.turquoise400, icon: 'star' },
-      'product_launch': { bg: Colors.pink50, text: Colors.pink500, icon: 'rocket-launch' },
+      'paid_media_campaigns': { bg: '#DBEAFE', text: '#2563EB', icon: 'campaign' },
+      'organic_social_channels': { bg: '#D1FAE5', text: '#059669', icon: 'share' },
+      'ecommerce_web_pages': { bg: '#FCE7F3', text: '#DB2777', icon: 'shopping-cart' },
+      'creative_asset_production': { bg: '#FCE7F3', text: '#EC4899', icon: 'palette' },
     };
     return colors[objective] || { bg: Colors.gray100, text: Colors.blueGray200, icon: 'flag' };
   };
@@ -176,28 +235,32 @@ const CampaignsScreen: React.FC = () => {
     return contentType?.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') || 'Content';
   };
 
-  const renderCampaignCard = (campaign: Campaign) => {
+  const renderCampaignCard = useCallback(({ item: campaign, index }: { item: Campaign; index: number }) => {
     const brand = campaign.brands;
     const contentPackages = campaign.campaign_content_packages || [];
     
     return (
-      <TouchableOpacity
-        key={campaign.id}
-        style={styles.campaignCard}
-        activeOpacity={0.95}
+      <AnimatedCard
+        index={index}
         onPress={() => {
           (navigation as any).navigate('CampaignDetails', { campaignId: campaign.id });
         }}
+        style={styles.campaignCard}
+        enableEntryAnimation={false}
       >
         {/* Gradient Background Header */}
         <View style={styles.cardHeader}>
           <View style={styles.brandSection}>
             <View style={styles.brandLogoWrapper}>
               {brand?.logo_url ? (
-                <Image
-                  source={{ uri: brand.logo_url }}
+                <FastImage
+                  source={{ 
+                    uri: brand.logo_url,
+                    priority: FastImage.priority.normal,
+                    cache: FastImage.cacheControl.immutable,
+                  }}
                   style={styles.brandLogo}
-                  resizeMode="cover"
+                  resizeMode={FastImage.resizeMode.cover}
                 />
               ) : (
                 <View style={styles.brandLogoPlaceholder}>
@@ -231,26 +294,26 @@ const CampaignsScreen: React.FC = () => {
             </Text>
           )}
 
-          {/* Tags Row */}
-          <View style={styles.tagsContainer}>
+          {/* Tags Row - Single Line with Flex */}
+          <View style={styles.tagsRow}>
             {campaign.objective && (
               <View style={[styles.tag, { backgroundColor: getObjectiveColors(campaign.objective).bg }]}>
-                <Icon name={getObjectiveColors(campaign.objective).icon} size={12} color={getObjectiveColors(campaign.objective).text} />
-                <Text style={[styles.tagText, { color: getObjectiveColors(campaign.objective).text }]}>
+                <Icon name={getObjectiveColors(campaign.objective).icon} size={13} color={getObjectiveColors(campaign.objective).text} />
+                <Text style={[styles.tagText, { color: getObjectiveColors(campaign.objective).text }]} numberOfLines={1}>
                   {getObjectiveLabel(campaign.objective)}
                 </Text>
               </View>
             )}
             {campaign.product_shipping === 'required' && (
-              <View style={[styles.tag, { backgroundColor: Colors.turquoise50 }]}>
-                <Icon name="card-giftcard" size={12} color={Colors.turquoise500} />
-                <Text style={[styles.tagText, { color: Colors.turquoise500 }]}>Products Included</Text>
+              <View style={[styles.tag, { backgroundColor: '#D1FAE5' }]}>
+                <Icon name="local-shipping" size={13} color="#059669" />
+                <Text style={[styles.tagText, { color: '#059669' }]} numberOfLines={1}>Products</Text>
               </View>
             )}
             {campaign.product_shipping === 'not_required' && (
-              <View style={[styles.tag, { backgroundColor: Colors.yellow50 }]}>
-                <Icon name="edit" size={12} color={Colors.yellow500} />
-                <Text style={[styles.tagText, { color: Colors.yellow500 }]}>Content Only</Text>
+              <View style={[styles.tag, { backgroundColor: '#FEF3C7' }]}>
+                <Icon name="edit" size={13} color="#F59E0B" />
+                <Text style={[styles.tagText, { color: '#F59E0B' }]} numberOfLines={1}>Content Only</Text>
               </View>
             )}
           </View>
@@ -297,9 +360,9 @@ const CampaignsScreen: React.FC = () => {
           <Text style={styles.viewDetailsText}>View Details</Text>
           <Icon name="arrow-forward" size={16} color={Colors.primary} />
         </View>
-      </TouchableOpacity>
+      </AnimatedCard>
     );
-  };
+  }, [navigation]);
 
   const renderApplicationCard = (application: Application) => {
     const campaign = application.campaigns;
@@ -326,10 +389,14 @@ const CampaignsScreen: React.FC = () => {
         <View style={styles.applicationHeader}>
           <View style={styles.brandLogoContainer}>
             {brand?.logo_url ? (
-              <Image
-                source={{ uri: brand.logo_url }}
+              <FastImage
+                source={{ 
+                  uri: brand.logo_url,
+                  priority: FastImage.priority.normal,
+                  cache: FastImage.cacheControl.immutable,
+                }}
                 style={styles.brandLogo}
-                resizeMode="cover"
+                resizeMode={FastImage.resizeMode.cover}
               />
             ) : (
               <Icon name="business" size={24} color={Colors.blueGray200} />
@@ -363,11 +430,13 @@ const CampaignsScreen: React.FC = () => {
       (campaign.brands?.brand_name || '').toLowerCase().includes(query) ||
       (campaign.objective || '').toLowerCase().replace(/_/g, ' ').includes(query);
     
-    // Apply objective filter
-    const matchesObjective = !selectedObjective || campaign.objective === selectedObjective;
+    // Apply objective filter (multi-select)
+    const matchesObjective = selectedObjectives.length === 0 || 
+      selectedObjectives.includes(campaign.objective || '');
     
-    // Apply shipping filter
-    const matchesShipping = !selectedShipping || campaign.product_shipping === selectedShipping;
+    // Apply shipping filter (multi-select)
+    const matchesShipping = selectedShipping.length === 0 || 
+      selectedShipping.includes(campaign.product_shipping || '');
     
     return matchesSearch && matchesObjective && matchesShipping;
   });
@@ -395,69 +464,113 @@ const CampaignsScreen: React.FC = () => {
   const renderTabContent = () => {
     if (loading) {
       return (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>Loading campaigns...</Text>
-        </View>
+        <Animated.FlatList
+          data={[1, 2, 3, 4]}
+          renderItem={() => <SkeletonCampaignCardNew />}
+          keyExtractor={(item) => `skeleton-${item}`}
+          contentContainerStyle={styles.contentContainer}
+          showsVerticalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+        />
       );
     }
 
     switch (activeTab) {
       case 'available':
-        if (filteredAvailableCampaigns.length === 0) {
-          return (
-            <View style={styles.emptyState}>
-              <Icon name="explore" size={64} color={Colors.textSecondary} />
-              <Text style={styles.emptyStateText}>No Campaigns Found</Text>
-              <Text style={styles.emptyStateSubtext}>
-                Check back later for new opportunities
-              </Text>
-            </View>
-          );
-        }
         return (
-          <ScrollView style={styles.contentContainer}>
-            {filteredAvailableCampaigns.map(renderCampaignCard)}
-            <View style={{ height: 32 }} />
-          </ScrollView>
+          <Animated.FlatList
+            data={filteredAvailableCampaigns}
+            renderItem={renderCampaignCard}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.contentContainer}
+            showsVerticalScrollIndicator={false}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={Colors.primary}
+                colors={[Colors.primary]}
+              />
+            }
+            ListEmptyComponent={
+              <EmptyState
+                icon="explore"
+                title="No Campaigns Found"
+                description="Check back later for new opportunities"
+              />
+            }
+            maxToRenderPerBatch={5}
+            windowSize={10}
+            removeClippedSubviews={true}
+            initialNumToRender={5}
+          />
         );
 
       case 'applied':
-        if (filteredApplications.length === 0) {
-          return (
-            <View style={styles.emptyState}>
-              <Icon name="pending-actions" size={64} color={Colors.textSecondary} />
-              <Text style={styles.emptyStateText}>No Applications Yet</Text>
-              <Text style={styles.emptyStateSubtext}>
-                Start applying to campaigns to track them here
-              </Text>
-            </View>
-          );
-        }
         return (
-          <ScrollView style={styles.contentContainer}>
-            {filteredApplications.map(renderApplicationCard)}
-            <View style={{ height: 32 }} />
-          </ScrollView>
+          <Animated.FlatList
+            data={filteredApplications}
+            renderItem={({ item, index }) => renderApplicationCard(item)}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.contentContainer}
+            showsVerticalScrollIndicator={false}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={Colors.primary}
+                colors={[Colors.primary]}
+              />
+            }
+            ListEmptyComponent={
+              <EmptyState
+                icon="pending-actions"
+                title="No Applications Yet"
+                description="Start applying to campaigns to track them here"
+              />
+            }
+            maxToRenderPerBatch={5}
+            windowSize={10}
+            removeClippedSubviews={true}
+            initialNumToRender={5}
+          />
         );
 
       case 'active':
-        if (filteredCollaborations.length === 0) {
-          return (
-            <View style={styles.emptyState}>
-              <Icon name="handshake" size={64} color={Colors.textSecondary} />
-              <Text style={styles.emptyStateText}>No Active Collaborations</Text>
-              <Text style={styles.emptyStateSubtext}>
-                Your approved campaigns will appear here
-              </Text>
-            </View>
-          );
-        }
         return (
-          <ScrollView style={styles.contentContainer}>
-            {filteredCollaborations.map(renderApplicationCard)}
-            <View style={{ height: 32 }} />
-          </ScrollView>
+          <Animated.FlatList
+            data={filteredCollaborations}
+            renderItem={({ item, index }) => renderApplicationCard(item)}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.contentContainer}
+            showsVerticalScrollIndicator={false}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={Colors.primary}
+                colors={[Colors.primary]}
+              />
+            }
+            ListEmptyComponent={
+              <EmptyState
+                icon="handshake"
+                title="No Active Collaborations"
+                description="Your approved campaigns will appear here"
+              />
+            }
+            maxToRenderPerBatch={5}
+            windowSize={10}
+            removeClippedSubviews={true}
+            initialNumToRender={5}
+          />
         );
     }
   };
@@ -468,23 +581,30 @@ const CampaignsScreen: React.FC = () => {
       <FilterModal
         visible={filterModalVisible}
         onClose={() => setFilterModalVisible(false)}
-        selectedObjective={selectedObjective}
+        selectedObjectives={selectedObjectives}
         selectedShipping={selectedShipping}
-        onObjectiveChange={setSelectedObjective}
+        onObjectivesChange={setSelectedObjectives}
         onShippingChange={setSelectedShipping}
         onClearAll={() => {
-          setSelectedObjective(null);
-          setSelectedShipping(null);
+          setSelectedObjectives([]);
+          setSelectedShipping([]);
         }}
       />
 
-      {/* Modern Header with Search and Filter */}
-      <View style={styles.header}>
+      {/* Animated Collapsible Header */}
+      <Animated.View 
+        style={[styles.header, animatedHeaderStyle]}
+        onLayout={(event) => {
+          headerHeight.value = event.nativeEvent.layout.height;
+        }}
+      >
         {/* Compact Professional Tabs */}
         <View style={styles.tabsContainer}>
-          {renderTabButton('available', 'Available', 'explore')}
-          {renderTabButton('applied', 'Applied', 'pending-actions')}
-          {renderTabButton('active', 'Active', 'handshake')}
+          {renderTabButton('available', 'Available', 'explore', 0)}
+          {renderTabButton('applied', 'Applied', 'pending-actions', 1)}
+          {renderTabButton('active', 'Active', 'handshake', 2)}
+          {/* Animated Indicator */}
+          <Animated.View style={[styles.tabIndicator, tabIndicatorStyle]} />
         </View>
 
         {/* Search Bar and Filter on Same Row */}
@@ -510,26 +630,15 @@ const CampaignsScreen: React.FC = () => {
             onPress={() => setFilterModalVisible(true)}
           >
             <Icon name="tune" size={24} color={Colors.text} />
-            {(selectedObjective || selectedShipping) && (
+            {(selectedObjectives.length > 0 || selectedShipping.length > 0) && (
               <View style={styles.filterBadge} />
             )}
           </TouchableOpacity>
         </View>
-      </View>
+      </Animated.View>
 
       {/* Tab Content */}
-      <ScrollView
-        style={styles.tabContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[Colors.primary]}
-          />
-        }
-      >
-        {renderTabContent()}
-      </ScrollView>
+      {renderTabContent()}
     </View>
   );
 };
@@ -537,12 +646,22 @@ const CampaignsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,  // Professional gray background
+    backgroundColor: Colors.background,
   },
   header: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     backgroundColor: Colors.white,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
+    zIndex: 1000,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
   },
   searchFilterRow: {
     flexDirection: 'row',
@@ -556,8 +675,8 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.gray100,  // Subtle gray for input
-    borderRadius: 12,
+    backgroundColor: Colors.gray100,
+    borderRadius: 4,
     paddingHorizontal: Spacing.md,
     height: 44,
     borderWidth: 1,
@@ -572,8 +691,8 @@ const styles = StyleSheet.create({
   filterButton: {
     width: 44,
     height: 44,
-    borderRadius: 12,
-    backgroundColor: Colors.gray100,  // Consistent with search
+    borderRadius: 4,
+    backgroundColor: Colors.gray100,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
@@ -607,6 +726,15 @@ const styles = StyleSheet.create({
   tabButtonActive: {
     borderBottomColor: Colors.primary,  // Turquoise for active tab
   },
+  tabIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    width: 100,
+    height: 3,
+    backgroundColor: Colors.primary,
+    borderRadius: 2,
+  },
   tabLabel: {
     fontSize: 14,
     fontWeight: '500',
@@ -621,6 +749,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: Spacing.lg,
+    paddingTop: 180, // Space for fixed header (tabs + search bar)
   },
   loadingContainer: {
     flex: 1,
@@ -634,34 +763,44 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
   },
   
-  // Modern Campaign Card - Professional styling
+  // Modern Campaign Card - Professional styling with sharp corners
   campaignCard: {
     backgroundColor: Colors.white,
-    borderRadius: 16,
-    marginBottom: 16,
+    borderRadius: 4,
+    marginBottom: 18,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
   },
   cardHeader: {
-    backgroundColor: Colors.white,  // Clean white header
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    backgroundColor: Colors.white,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: '#F3F4F6',
   },
   brandSection: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   brandLogoWrapper: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
+    width: 52,
+    height: 52,
+    borderRadius: 4,
     overflow: 'hidden',
     backgroundColor: Colors.white,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   brandLogo: {
     width: '100%',
@@ -672,53 +811,62 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.gray100,  // Neutral placeholder
+    backgroundColor: '#F9FAFB',
   },
   brandInfo: {
-    marginLeft: 12,
+    marginLeft: 14,
     flex: 1,
   },
   brandName: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '700',
-    color: Colors.blueGray500,  // Brand black
-    marginBottom: 2,
+    color: '#111827',
+    marginBottom: 3,
+    letterSpacing: -0.2,
   },
   brandWebsite: {
     fontSize: 13,
-    color: Colors.textSecondary,  // Secondary text
+    color: Colors.primary,
+    fontWeight: '500',
   },
   cardBody: {
-    padding: 16,
+    padding: 18,
   },
   campaignTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: Colors.blueGray500,  // Brand black
-    lineHeight: 24,
-    marginBottom: 8,
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+    lineHeight: 26,
+    marginBottom: 10,
+    letterSpacing: -0.3,
   },
   campaignDescription: {
-    fontSize: 14,
-    color: Colors.blueGray200,  // Readable gray
-    lineHeight: 20,
-    marginBottom: 12,
+    fontSize: 15,
+    color: '#6B7280',
+    lineHeight: 22,
+    marginBottom: 14,
   },
-  tagsContainer: {
+  tagsRow: {
     flexDirection: 'row',
     flexWrap: 'nowrap',
     gap: 8,
-    marginBottom: 12,
+    marginBottom: 14,
+    overflow: 'hidden',
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 14,
   },
   tag: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 20,
-    gap: 5,
-    borderWidth: 1,
-    borderColor: 'transparent',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    gap: 4,
+    flexShrink: 1,
   },
   tagText: {
     fontSize: 12,
@@ -727,8 +875,8 @@ const styles = StyleSheet.create({
   },
   packagesCompact: {
     backgroundColor: '#F9FAFB',
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: 4,
+    padding: 14,
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
@@ -754,7 +902,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 4,
     gap: 6,
     borderWidth: 1,
     borderColor: Colors.border,
@@ -800,7 +948,7 @@ const styles = StyleSheet.create({
   // Application Card
   applicationCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 4,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
@@ -813,7 +961,7 @@ const styles = StyleSheet.create({
   brandLogoContainer: {
     width: 44,
     height: 44,
-    borderRadius: 12,
+    borderRadius: 4,
     backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',

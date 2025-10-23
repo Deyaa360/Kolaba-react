@@ -14,6 +14,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Colors, Typography, Spacing, BorderRadius } from '../theme';
 import supabaseService from '../services/supabase';
+import { ToastNotification } from '../components';
 
 interface SignupScreenProps {
   navigation: any;
@@ -27,18 +28,27 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success'|'error'|'info'|'warning'>('info');
+
+  const showToast = (message: string, type: 'success'|'error'|'info'|'warning') => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
 
   const handleSignup = async () => {
     if (!name || !email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields');
+      showToast('Please fill in all fields', 'warning');
       return;
     }
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      showToast('Passwords do not match', 'error');
       return;
     }
     if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
+      showToast('Password must be at least 6 characters', 'warning');
       return;
     }
 
@@ -50,13 +60,10 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
       await supabaseService.signUp(email, password, {
         data: { first_name: firstName, last_name: lastName }
       });
-      Alert.alert(
-        'Success!',
-        'Account created! Please check your email to confirm your account.',
-        [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
-      );
+      showToast('Account created! Please check your email to confirm.', 'success');
+      setTimeout(() => navigation.navigate('Login'), 2000);
     } catch (error: any) {
-      Alert.alert('Signup Failed', error.message || 'Could not create account');
+      showToast(error.message || 'Could not create account', 'error');
     } finally {
       setLoading(false);
     }
@@ -223,6 +230,14 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
           </View>
         </View>
       </ScrollView>
+
+      {/* Toast Notification */}
+      <ToastNotification
+        visible={toastVisible}
+        message={toastMessage}
+        type={toastType}
+        onHide={() => setToastVisible(false)}
+      />
     </KeyboardAvoidingView>
   );
 };

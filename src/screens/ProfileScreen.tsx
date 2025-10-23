@@ -11,6 +11,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Colors, Typography, Spacing, BorderRadius } from '../theme';
 import supabaseService from '../services/supabase';
+import { SkeletonProfileCard, AnimatedCard, AnimatedButton, ToastNotification } from '../components';
 
 interface UserProfile {
   id: string;
@@ -30,6 +31,15 @@ const ProfileScreen = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [creatorProfile, setCreatorProfile] = useState<CreatorProfile | null>(null);
   const [stats, setStats] = useState({ applications: 0, completed: 0, earnings: 0 });
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success'|'error'|'info'|'warning'>('info');
+
+  const showToast = (message: string, type: 'success'|'error'|'info'|'warning') => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
 
   useEffect(() => {
     loadProfile();
@@ -70,6 +80,7 @@ const ProfileScreen = () => {
       }
     } catch (error) {
       console.error('Error loading profile:', error);
+      showToast('Failed to load profile data', 'error');
       // Set defaults on error
       setStats({ applications: 0, completed: 0, earnings: 0 });
     } finally {
@@ -77,33 +88,22 @@ const ProfileScreen = () => {
     }
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await supabaseService.signOut();
-            } catch (error) {
-              console.error('Error logging out:', error);
-              Alert.alert('Error', 'Failed to logout. Please try again.');
-            }
-          },
-        },
-      ]
-    );
+  const handleLogout = async () => {
+    try {
+      showToast('Logging out...', 'info');
+      await supabaseService.signOut();
+      showToast('Successfully logged out', 'success');
+    } catch (error) {
+      console.error('Error logging out:', error);
+      showToast('Failed to logout. Please try again.', 'error');
+    }
   };
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
+      <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+        <SkeletonProfileCard />
+      </ScrollView>
     );
   }
 
@@ -166,44 +166,73 @@ const ProfileScreen = () => {
 
       {/* Menu Items */}
       <View style={styles.menuSection}>
-        <TouchableOpacity style={styles.menuItem} activeOpacity={0.7}>
+        <AnimatedCard 
+          style={styles.menuItem} 
+          onPress={() => {}}
+          enableEntryAnimation={false}
+        >
           <View style={styles.menuIconContainer}>
             <Icon name="edit" size={20} color="#6366F1" />
           </View>
           <Text style={styles.menuText}>Edit Profile</Text>
           <Icon name="chevron-right" size={24} color="#9CA3AF" />
-        </TouchableOpacity>
+        </AnimatedCard>
 
-        <TouchableOpacity style={styles.menuItem} activeOpacity={0.7}>
+        <AnimatedCard 
+          style={styles.menuItem} 
+          onPress={() => {}}
+          enableEntryAnimation={false}
+        >
           <View style={styles.menuIconContainer}>
             <Icon name="assignment" size={20} color="#6366F1" />
           </View>
           <Text style={styles.menuText}>My Applications</Text>
           <Icon name="chevron-right" size={24} color="#9CA3AF" />
-        </TouchableOpacity>
+        </AnimatedCard>
 
-        <TouchableOpacity style={styles.menuItem} activeOpacity={0.7}>
+        <AnimatedCard 
+          style={styles.menuItem} 
+          onPress={() => {}}
+          enableEntryAnimation={false}
+        >
           <View style={styles.menuIconContainer}>
             <Icon name="settings" size={20} color="#6366F1" />
           </View>
           <Text style={styles.menuText}>Settings</Text>
           <Icon name="chevron-right" size={24} color="#9CA3AF" />
-        </TouchableOpacity>
+        </AnimatedCard>
 
-        <TouchableOpacity style={styles.menuItem} activeOpacity={0.7}>
+        <AnimatedCard 
+          style={styles.menuItem} 
+          onPress={() => {}}
+          enableEntryAnimation={false}
+        >
           <View style={styles.menuIconContainer}>
             <Icon name="help-outline" size={20} color="#6366F1" />
           </View>
           <Text style={styles.menuText}>Help & Support</Text>
           <Icon name="chevron-right" size={24} color="#9CA3AF" />
-        </TouchableOpacity>
+        </AnimatedCard>
       </View>
 
       {/* Logout Button */}
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.8}>
-        <Icon name="logout" size={20} color="#EF4444" />
-        <Text style={styles.logoutText}>Logout</Text>
-      </TouchableOpacity>
+      <View style={{ paddingHorizontal: Spacing.lg, paddingVertical: Spacing.xl }}>
+        <AnimatedButton
+          title="Logout"
+          onPress={handleLogout}
+          variant="outline"
+          style={{ borderColor: Colors.error }}
+          textStyle={{ color: Colors.error }}
+        />
+      </View>
+
+      {/* Toast Notification */}
+      <ToastNotification
+        visible={toastVisible}
+        message={toastMessage}
+        type={toastType}
+        onHide={() => setToastVisible(false)}
+      />
     </ScrollView>
   );
 };

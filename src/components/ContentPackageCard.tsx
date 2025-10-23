@@ -101,7 +101,7 @@ const ContentPackageCard: React.FC<ContentPackageCardProps> = ({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: Colors.white,
-    borderRadius: BorderRadius.lg,
+    borderRadius: 4,
     borderWidth: 1,
     borderColor: Colors.border,
     marginBottom: Spacing.md,
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: Colors.background,
     padding: Spacing.md,
-    borderRadius: BorderRadius.md,
+    borderRadius: 4,
     marginTop: Spacing.sm,
   },
   productLinkText: {

@@ -101,14 +101,93 @@ export const Colors = {
 };
 
 export const Typography = {
-  // Font Families
+  // === APPLE-STYLE TEXT STYLES (SF Pro inspired) ===
+  // Use these for consistent hierarchy across the app
+  
+  display: {
+    fontSize: 34,
+    lineHeight: 41,
+    fontWeight: '700' as const,
+    letterSpacing: -0.4,
+  },
+  
+  title1: {
+    fontSize: 28,
+    lineHeight: 34,
+    fontWeight: '700' as const,
+    letterSpacing: -0.3,
+  },
+  
+  title2: {
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: '600' as const,
+    letterSpacing: -0.2,
+  },
+  
+  title3: {
+    fontSize: 20,
+    lineHeight: 25,
+    fontWeight: '600' as const,
+    letterSpacing: -0.1,
+  },
+  
+  headline: {
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: '600' as const,
+    letterSpacing: -0.4,
+  },
+  
+  body: {
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: '400' as const,
+    letterSpacing: -0.4,
+  },
+  
+  callout: {
+    fontSize: 16,
+    lineHeight: 21,
+    fontWeight: '400' as const,
+    letterSpacing: -0.3,
+  },
+  
+  subheadline: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: '400' as const,
+    letterSpacing: -0.2,
+  },
+  
+  footnote: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '400' as const,
+    letterSpacing: -0.1,
+  },
+  
+  caption1: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '400' as const,
+    letterSpacing: 0,
+  },
+  
+  caption2: {
+    fontSize: 11,
+    lineHeight: 13,
+    fontWeight: '400' as const,
+    letterSpacing: 0.1,
+  },
+  
+  // === LEGACY SUPPORT (Maintain backward compatibility) ===
   fontFamily: {
     regular: 'System',
     medium: 'System',
     bold: 'System',
   },
   
-  // Font Sizes
   fontSize: {
     xs: 11,
     sm: 13,
@@ -120,7 +199,6 @@ export const Typography = {
     '4xl': 34,
   },
   
-  // Font Weights
   fontWeight: {
     regular: '400' as const,
     medium: '500' as const,
@@ -128,7 +206,6 @@ export const Typography = {
     bold: '700' as const,
   },
   
-  // Line Heights
   lineHeight: {
     tight: 1.2,
     normal: 1.5,
@@ -136,24 +213,33 @@ export const Typography = {
   },
 };
 
+// === SPACING SYSTEM (4pt/8pt grid - Apple/Material standard) ===
 export const Spacing = {
-  xs: 4,
-  sm: 8,
-  md: 16,
-  lg: 24,
-  xl: 32,
-  '2xl': 48,
-  '3xl': 64,
+  xxs: 4,    // 4pt
+  xs: 8,     // 8pt
+  sm: 12,    // 12pt
+  md: 16,    // 16pt
+  lg: 20,    // 20pt
+  xl: 24,    // 24pt
+  '2xl': 32, // 32pt
+  '3xl': 40, // 40pt
+  '4xl': 48, // 48pt
+  '5xl': 64, // 64pt
+  '6xl': 80, // 80pt
+  '7xl': 96, // 96pt
 };
 
+// === BORDER RADIUS (Refined scale) ===
 export const BorderRadius = {
   none: 0,
-  sm: 4,
-  md: 8,
-  lg: 12,
-  xl: 16,
-  '2xl': 24,
-  full: 9999,
+  xs: 4,     // Tiny elements
+  sm: 6,     // Small components
+  md: 8,     // Inputs, small buttons
+  lg: 10,    // Buttons, cards
+  xl: 12,    // Large cards
+  '2xl': 16, // Modal, large containers
+  '3xl': 20, // Extra large
+  full: 9999, // Pills, badges (fully rounded)
 };
 
 export const Animations = {

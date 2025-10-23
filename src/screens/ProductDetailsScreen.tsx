@@ -13,11 +13,21 @@ import {
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import supabaseService from '../services/supabase';
 import { Colors, Typography, Spacing, BorderRadius } from '../theme';
+import { ToastNotification } from '../components';
 
 const ProductDetailsScreen = ({ route, navigation }: any) => {
   const { productId } = route.params;
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success'|'error'|'info'|'warning'>('info');
+
+  const showToast = (message: string, type: 'success'|'error'|'info'|'warning') => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
 
   useEffect(() => {
     loadProductDetails();
@@ -29,7 +39,7 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
       const productData = await supabaseService.getProductById(productId);
       
       if (!productData) {
-        Alert.alert('Error', 'Product not found');
+        showToast('Product not found', 'error');
         navigation.goBack();
         return;
       }
@@ -37,7 +47,7 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
       setProduct(productData);
     } catch (error) {
       console.error('Error loading product details:', error);
-      Alert.alert('Error', 'Failed to load product details');
+      showToast('Failed to load product details', 'error');
     } finally {
       setLoading(false);
     }
@@ -56,11 +66,11 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
       if (supported) {
         await Linking.openURL(url);
       } else {
-        Alert.alert('Error', 'Cannot open product link');
+        showToast('Cannot open product link', 'error');
       }
     } catch (error) {
       console.error('Error opening product link:', error);
-      Alert.alert('Error', 'Failed to open product link');
+      showToast('Failed to open product link', 'error');
     }
   };
 
@@ -153,6 +163,14 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
       )}
 
       <View style={{ height: Spacing.xl }} />
+
+      {/* Toast Notification */}
+      <ToastNotification
+        visible={toastVisible}
+        message={toastMessage}
+        type={toastType}
+        onHide={() => setToastVisible(false)}
+      />
     </ScrollView>
   );
 };
