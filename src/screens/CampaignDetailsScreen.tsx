@@ -611,7 +611,7 @@ const CampaignDetailsScreen = ({ route, navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.white,  // Clean white, sections add their own borders
   },
   header: {
     flexDirection: 'row',
@@ -639,7 +639,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.background,  // Light gray for loading
   },
   loadingText: {
     marginTop: Spacing.md,
@@ -650,7 +650,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.background,  // Light gray for error
     padding: Spacing.xl,
   },
   errorText: {
@@ -673,8 +673,11 @@ const styles = StyleSheet.create({
   },
   heroSection: {
     backgroundColor: Colors.white,
-    padding: Spacing.xl,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.xl,
     paddingBottom: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
   },
   campaignTitle: {
     fontSize: 24,
@@ -725,38 +728,38 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   section: {
-    marginTop: Spacing.sm,
+    backgroundColor: Colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.lg,
-    backgroundColor: '#FAFBFC',
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#E5E7EB',
+    backgroundColor: Colors.white,
   },
   sectionTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#111827',
+    color: Colors.blueGray500,
     marginLeft: Spacing.sm,
     letterSpacing: -0.3,
   },
   sectionContent: {
     backgroundColor: Colors.white,
-    padding: Spacing.xl,
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.lg,
   },
   packageItem: {
     backgroundColor: Colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: Colors.border,
   },
   packageHeaderButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: Spacing.xl,
+    paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.lg,
   },
   packageIconContainer: {
@@ -849,7 +852,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.md,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.background,  // Light gray bg
     borderRadius: BorderRadius.md,
     marginTop: Spacing.sm,
     gap: Spacing.sm,
@@ -874,13 +877,13 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: BorderRadius.md,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.background,  // Light gray bg
   },
   productImagePlaceholderSmall: {
     width: 60,
     height: 60,
     borderRadius: BorderRadius.md,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.background,  // Light gray bg
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
@@ -909,13 +912,13 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: BorderRadius.md,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.background,  // Light gray bg
   },
   productImagePlaceholder: {
     width: 80,
     height: 80,
     borderRadius: BorderRadius.md,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.background,  // Light gray bg
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1036,7 +1039,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#6366F1',
+    backgroundColor: Colors.primary,  // Turquoise
     paddingVertical: 16,
     borderRadius: 14,
     gap: Spacing.sm,

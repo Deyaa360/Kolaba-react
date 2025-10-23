@@ -211,14 +211,14 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: Colors.background,  // Light gray
   },
   contentContainer: {
     paddingBottom: Spacing.xl * 2,
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: Colors.background,  // Light gray
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -227,9 +227,9 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
     paddingTop: 40,
     paddingBottom: Spacing.xl,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: Colors.border,
   },
   avatarContainer: {
     marginBottom: Spacing.md,
@@ -238,14 +238,14 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: '#6366F1',
+    backgroundColor: Colors.primary,  // Turquoise
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarText: {
     fontSize: 40,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: Colors.white,
   },
   name: {
     fontSize: 22,

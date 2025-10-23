@@ -137,7 +137,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             onPress={() => navigation.navigate('Signup')}
             disabled={loading}>
             <View style={styles.buttonContent}>
-              <Icon name="person-add" size={20} color={Colors.primary} />
+              <Icon name="person-add" size={20} color={Colors.blueGray300} />
               <Text style={styles.signupButtonText}>Create Account</Text>
             </View>
           </TouchableOpacity>
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: Colors.primary + '15',
+    backgroundColor: Colors.turquoise50,  // Very subtle turquoise tint
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.lg,
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
   logo: {
     fontSize: Typography.fontSize['3xl'],
     fontWeight: Typography.fontWeight.bold,
-    color: Colors.primary,
+    color: Colors.black,  // Brand black for serious look
     marginBottom: Spacing.xs,
   },
   tagline: {
@@ -220,19 +220,19 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   forgotPasswordText: {
-    color: Colors.primary,
+    color: Colors.primary,  // Turquoise link
     fontSize: Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.medium,
   },
   loginButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.button,  // Primary button = turquoise
     borderRadius: BorderRadius.lg,
     paddingVertical: Spacing.md,
     alignItems: 'center',
     marginTop: Spacing.sm,
   },
   loginButtonDisabled: {
-    opacity: 0.6,
+    opacity: 0.5,
   },
   loginButtonText: {
     color: Colors.white,
@@ -262,13 +262,14 @@ const styles = StyleSheet.create({
   },
   signupButton: {
     borderWidth: 2,
-    borderColor: Colors.primary,
+    borderColor: Colors.border,  // Gray border for secondary action
+    backgroundColor: Colors.white,
     borderRadius: BorderRadius.lg,
     paddingVertical: Spacing.md,
     alignItems: 'center',
   },
   signupButtonText: {
-    color: Colors.primary,
+    color: Colors.blueGray300,  // Blue-gray text for secondary action
     fontSize: Typography.fontSize.lg,
     fontWeight: Typography.fontWeight.bold,
   },

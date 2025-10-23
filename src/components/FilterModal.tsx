@@ -63,7 +63,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.modalBody}>
+          <View style={styles.modalBody}>
             {/* Campaign Objective */}
             <Text style={styles.sectionTitle}>Campaign Objective</Text>
             {objectives.map((objective) => (
@@ -105,7 +105,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                 <Text style={styles.filterLabel}>{option.label}</Text>
               </TouchableOpacity>
             ))}
-          </ScrollView>
+          </View>
 
           {/* Apply Button */}
           <TouchableOpacity style={styles.applyButton} onPress={onClose}>
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '75%',
+    paddingBottom: Spacing.lg,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -154,6 +154,7 @@ const styles = StyleSheet.create({
   modalBody: {
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.md,
+    paddingBottom: Spacing.sm,
   },
   sectionTitle: {
     fontSize: Typography.fontSize.sm,
@@ -167,10 +168,10 @@ const styles = StyleSheet.create({
   filterOption: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: Spacing.sm,
+    paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.md,
     marginBottom: Spacing.xs,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.white,  // Remove background color
     borderRadius: BorderRadius.md,
   },
   radioButton: {

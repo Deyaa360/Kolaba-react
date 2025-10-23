@@ -250,27 +250,27 @@ const DashboardScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* Progress Tracker - Show creator's journey */}
+      {/* Progress Tracker - Professional, consistent colors */}
       {(stats.totalApplications > 0 || stats.approvedApplications > 0 || stats.completedCampaigns > 0) && (
         <View style={styles.progressSection}>
           <Text style={styles.progressTitle}>Your Creator Journey</Text>
           <View style={styles.progressTracker}>
             <View style={styles.progressStep}>
-              <View style={[styles.progressCircle, { backgroundColor: '#6366F1' }]}>
+              <View style={[styles.progressCircle, { backgroundColor: Colors.gray600 }]}>
                 <Text style={styles.progressValue}>{stats.totalApplications}</Text>
               </View>
               <Text style={styles.progressLabel}>Applied</Text>
             </View>
             <View style={styles.progressLine} />
             <View style={styles.progressStep}>
-              <View style={[styles.progressCircle, { backgroundColor: '#10B981' }]}>
+              <View style={[styles.progressCircle, { backgroundColor: Colors.primary }]}>
                 <Text style={styles.progressValue}>{stats.approvedApplications}</Text>
               </View>
               <Text style={styles.progressLabel}>Approved</Text>
             </View>
             <View style={styles.progressLine} />
             <View style={styles.progressStep}>
-              <View style={[styles.progressCircle, { backgroundColor: '#8B5CF6' }]}>
+              <View style={[styles.progressCircle, { backgroundColor: Colors.success }]}>
                 <Text style={styles.progressValue}>{stats.completedCampaigns}</Text>
               </View>
               <Text style={styles.progressLabel}>Completed</Text>
@@ -281,13 +281,13 @@ const DashboardScreen: React.FC = () => {
           {stats.totalEarnings > 0 && (
             <View style={styles.earningsBanner}>
               <View style={styles.earningsIcon}>
-                <Icon name="payments" size={24} color="#059669" />
+                <Icon name="payments" size={24} color={Colors.success} />
               </View>
               <View style={styles.earningsInfo}>
                 <Text style={styles.earningsLabel}>Total Earnings</Text>
                 <Text style={styles.earningsValue}>${stats.totalEarnings.toFixed(2)}</Text>
               </View>
-              <Icon name="arrow-forward" size={20} color="#6B7280" />
+              <Icon name="arrow-forward" size={20} color={Colors.gray500} />
             </View>
           )}
         </View>
@@ -424,18 +424,18 @@ const DashboardScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: Colors.background,  // Light gray
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: Colors.background,  // Light gray
   },
   loadingText: {
     marginTop: Spacing.md,
     fontSize: 14,
-    color: '#9CA3AF',
+    color: Colors.textTertiary,
   },
   header: {
     flexDirection: 'row',
@@ -444,22 +444,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.xl * 1.5,
     paddingBottom: Spacing.lg,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.white,
   },
   welcomeText: {
     fontSize: 15,
     fontWeight: '500',
-    color: '#6B7280',
+    color: Colors.textSecondary,
     marginBottom: 4,
   },
   userName: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#111827',
+    color: Colors.blueGray500,  // Brand black
     letterSpacing: -0.8,
   },
   progressSection: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.white,
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.xl,
     marginTop: Spacing.sm,
@@ -564,11 +564,11 @@ const styles = StyleSheet.create({
   },
   spotlightCard: {
     width: 180,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.white,
     borderRadius: 16,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: Colors.border,
   },
   spotlightCardHeader: {
     marginBottom: Spacing.md,

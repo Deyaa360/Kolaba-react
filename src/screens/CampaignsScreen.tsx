@@ -137,21 +137,34 @@ const CampaignsScreen: React.FC = () => {
 
   const getObjectiveColors = (objective: string) => {
     const colors: { [key: string]: { bg: string; text: string; icon: string } } = {
-      'paid_media_campaigns': { bg: '#FEF3C7', text: '#F59E0B', icon: 'campaign' },
-      'organic_social_channels': { bg: '#D1FAE5', text: '#059669', icon: 'share' },
-      'ecommerce_web_pages': { bg: '#DBEAFE', text: '#2563EB', icon: 'shopping-cart' },
-      'creative_asset_production': { bg: '#E9D5FF', text: '#9333EA', icon: 'palette' },
-      'brand_awareness': { bg: '#FCE7F3', text: '#DB2777', icon: 'star' },
-      'product_launch': { bg: '#FED7AA', text: '#EA580C', icon: 'rocket-launch' },
+      'paid_media_campaigns': { bg: Colors.yellow50, text: Colors.yellow500, icon: 'campaign' },
+      'organic_social_channels': { bg: Colors.turquoise50, text: Colors.turquoise500, icon: 'share' },
+      'ecommerce_web_pages': { bg: Colors.yellow50, text: Colors.yellow400, icon: 'shopping-cart' },
+      'creative_asset_production': { bg: Colors.pink50, text: Colors.pink400, icon: 'palette' },
+      'brand_awareness': { bg: Colors.turquoise50, text: Colors.turquoise400, icon: 'star' },
+      'product_launch': { bg: Colors.pink50, text: Colors.pink500, icon: 'rocket-launch' },
     };
-    return colors[objective] || { bg: '#F3F4F6', text: '#6B7280', icon: 'flag' };
+    return colors[objective] || { bg: Colors.gray100, text: Colors.blueGray200, icon: 'flag' };
   };
 
   const getPackageTypeColor = (contentType: string) => {
     const type = contentType?.toLowerCase() || '';
-    if (type.includes('video')) return '#9333EA'; // purple
-    if (type.includes('photo') || type.includes('image')) return '#0D9488'; // teal
-    return '#4F46E5'; // indigo
+    // Different colors for different package types using brand palette
+    if (type.includes('authentic_short_video')) return Colors.turquoise500;
+    if (type.includes('static_photo_set')) return Colors.pink400;
+    if (type.includes('review_testimonial_video')) return Colors.yellow500;
+    if (type.includes('raw_video_clips_set')) return Colors.turquoise400;
+    return Colors.blueGray200;
+  };
+
+  const getPackageTypeIcon = (contentType: string) => {
+    const type = contentType?.toLowerCase() || '';
+    // Different icons for different package types
+    if (type.includes('authentic_short_video')) return 'videocam';
+    if (type.includes('static_photo_set')) return 'photo-library';
+    if (type.includes('review_testimonial_video')) return 'rate-review';
+    if (type.includes('raw_video_clips_set')) return 'movie';
+    return 'video-library';
   };
 
   const getPackageTypeLabel = (contentType: string) => {
@@ -188,7 +201,7 @@ const CampaignsScreen: React.FC = () => {
                 />
               ) : (
                 <View style={styles.brandLogoPlaceholder}>
-                  <Icon name="business" size={22} color="#6366F1" />
+                  <Icon name="business" size={22} color={Colors.blueGray200} />
                 </View>
               )}
             </View>
@@ -229,15 +242,15 @@ const CampaignsScreen: React.FC = () => {
               </View>
             )}
             {campaign.product_shipping === 'required' && (
-              <View style={[styles.tag, { backgroundColor: '#D1FAE5' }]}>
-                <Icon name="card-giftcard" size={12} color="#059669" />
-                <Text style={[styles.tagText, { color: '#059669' }]}>Products Included</Text>
+              <View style={[styles.tag, { backgroundColor: Colors.turquoise50 }]}>
+                <Icon name="card-giftcard" size={12} color={Colors.turquoise500} />
+                <Text style={[styles.tagText, { color: Colors.turquoise500 }]}>Products Included</Text>
               </View>
             )}
             {campaign.product_shipping === 'not_required' && (
-              <View style={[styles.tag, { backgroundColor: '#E0E7FF' }]}>
-                <Icon name="edit" size={12} color="#4F46E5" />
-                <Text style={[styles.tagText, { color: '#4F46E5' }]}>Content Only</Text>
+              <View style={[styles.tag, { backgroundColor: Colors.yellow50 }]}>
+                <Icon name="edit" size={12} color={Colors.yellow500} />
+                <Text style={[styles.tagText, { color: Colors.yellow500 }]}>Content Only</Text>
               </View>
             )}
           </View>
@@ -246,7 +259,7 @@ const CampaignsScreen: React.FC = () => {
           {contentPackages.length > 0 && (
             <View style={styles.packagesCompact}>
               <View style={styles.packagesCompactHeader}>
-                <Icon name="video-library" size={16} color="#8B5CF6" />
+                <Icon name="video-library" size={16} color={Colors.blueGray200} />
                 <Text style={styles.packagesCompactTitle}>
                   {contentPackages.length} Content Package{contentPackages.length > 1 ? 's' : ''}
                 </Text>
@@ -254,12 +267,13 @@ const CampaignsScreen: React.FC = () => {
               <View style={styles.packagesGrid}>
                 {contentPackages.slice(0, 2).map((pkg: any, index: number) => {
                   const packageColor = getPackageTypeColor(pkg.content_type);
+                  const packageIcon = getPackageTypeIcon(pkg.content_type);
                   const packageLabel = getPackageTypeLabel(pkg.content_type);
                   const quantity = pkg.quantity_needed || 1;
                   
                   return (
                     <View key={index} style={styles.packagePill}>
-                      <View style={[styles.packageDot, { backgroundColor: packageColor }]} />
+                      <Icon name={packageIcon} size={14} color={packageColor} />
                       <Text style={styles.packagePillText} numberOfLines={1}>
                         {packageLabel} x{quantity}
                       </Text>
@@ -278,10 +292,10 @@ const CampaignsScreen: React.FC = () => {
           )}
         </View>
 
-        {/* Footer */}
+        {/* Footer - Primary CTA */}
         <View style={styles.cardFooter}>
           <Text style={styles.viewDetailsText}>View Details</Text>
-          <Icon name="arrow-forward" size={16} color="#6366F1" />
+          <Icon name="arrow-forward" size={16} color={Colors.primary} />
         </View>
       </TouchableOpacity>
     );
@@ -293,9 +307,9 @@ const CampaignsScreen: React.FC = () => {
     
     const getStatusColor = () => {
       switch (application.status) {
-        case 'approved': return '#10B981';
-        case 'rejected': return '#EF4444';
-        default: return Colors.primary;
+        case 'approved': return Colors.success;
+        case 'rejected': return Colors.error;
+        default: return Colors.warning;  // Pending = Yellow
       }
     };
 
@@ -318,7 +332,7 @@ const CampaignsScreen: React.FC = () => {
                 resizeMode="cover"
               />
             ) : (
-              <Icon name="business" size={24} color={Colors.primary} />
+              <Icon name="business" size={24} color={Colors.blueGray200} />
             )}
           </View>
           <View style={styles.applicationInfo}>
@@ -523,12 +537,12 @@ const CampaignsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: Colors.background,  // Professional gray background
   },
   header: {
     backgroundColor: Colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: Colors.border,
   },
   searchFilterRow: {
     flexDirection: 'row',
@@ -542,10 +556,12 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: Colors.gray100,  // Subtle gray for input
     borderRadius: 12,
     paddingHorizontal: Spacing.md,
     height: 44,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   searchInput: {
     flex: 1,
@@ -557,10 +573,12 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: Colors.gray100,  // Consistent with search
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   filterBadge: {
     position: 'absolute',
@@ -569,7 +587,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#6366F1',
+    backgroundColor: Colors.primary,  // Turquoise indicator
   },
   tabsContainer: {
     flexDirection: 'row',
@@ -587,15 +605,15 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   tabButtonActive: {
-    borderBottomColor: '#6366F1',
+    borderBottomColor: Colors.primary,  // Turquoise for active tab
   },
   tabLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#6B7280',
+    color: Colors.textSecondary,  // Gray for inactive
   },
   tabLabelActive: {
-    color: '#6366F1',
+    color: Colors.primary,  // Turquoise for active
     fontWeight: '600',
   },
   tabContent: {
@@ -616,21 +634,21 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
   },
   
-  // Modern Campaign Card
+  // Modern Campaign Card - Professional styling
   campaignCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.white,
     borderRadius: 16,
     marginBottom: 16,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: Colors.border,
   },
   cardHeader: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: Colors.white,  // Clean white header
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: Colors.border,
   },
   brandSection: {
     flexDirection: 'row',
@@ -641,9 +659,9 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 12,
     overflow: 'hidden',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.white,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: Colors.border,
   },
   brandLogo: {
     width: '100%',
@@ -654,7 +672,7 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#EEF2FF',
+    backgroundColor: Colors.gray100,  // Neutral placeholder
   },
   brandInfo: {
     marginLeft: 12,
@@ -663,12 +681,12 @@ const styles = StyleSheet.create({
   brandName: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#111827',
+    color: Colors.blueGray500,  // Brand black
     marginBottom: 2,
   },
   brandWebsite: {
     fontSize: 13,
-    color: '#6B7280',
+    color: Colors.textSecondary,  // Secondary text
   },
   cardBody: {
     padding: 16,
@@ -676,33 +694,36 @@ const styles = StyleSheet.create({
   campaignTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#111827',
+    color: Colors.blueGray500,  // Brand black
     lineHeight: 24,
     marginBottom: 8,
   },
   campaignDescription: {
     fontSize: 14,
-    color: '#4B5563',
+    color: Colors.blueGray200,  // Readable gray
     lineHeight: 20,
     marginBottom: 12,
   },
   tagsContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexWrap: 'nowrap',
     gap: 8,
     marginBottom: 12,
   },
   tag: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+    gap: 5,
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
   tagText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: 0.2,
   },
   packagesCompact: {
     backgroundColor: '#F9FAFB',
@@ -730,13 +751,13 @@ const styles = StyleSheet.create({
   packagePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.white,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
     gap: 6,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: Colors.border,
   },
   packageDot: {
     width: 6,
@@ -745,18 +766,18 @@ const styles = StyleSheet.create({
   },
   packagePillText: {
     fontSize: 12,
-    color: '#374151',
+    color: Colors.blueGray300,
     fontWeight: '500',
   },
   packagePillMore: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: Colors.gray100,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
   },
   packagePillMoreText: {
     fontSize: 12,
-    color: '#6B7280',
+    color: Colors.textSecondary,
     fontWeight: '600',
   },
   cardFooter: {
@@ -764,16 +785,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-end',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#F9FAFB',
+    paddingVertical: 14,
+    backgroundColor: Colors.white,  // Clean white footer
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: Colors.border,
     gap: 6,
   },
   viewDetailsText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#6366F1',
+    fontWeight: '700',
+    color: Colors.primary,  // Turquoise for primary CTA
   },
   
   // Application Card
