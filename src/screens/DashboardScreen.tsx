@@ -397,6 +397,128 @@ const DashboardScreen: React.FC = () => {
         </View>
       )}
 
+      {/* Empty State for No Applications */}
+      {recentApplications.length === 0 && (
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View>
+              <Text style={styles.sectionTitle}>My Applications</Text>
+              <Text style={styles.sectionSubtitle}>Start your creator journey</Text>
+            </View>
+          </View>
+          <View style={styles.emptyState}>
+            <Icon name="assignment" size={48} color={Colors.textSecondary} />
+            <Text style={styles.emptyStateText}>No Applications Yet</Text>
+            <Text style={styles.emptyStateSubtext}>
+              Browse available campaigns and start applying to collaborate with brands.
+            </Text>
+            <TouchableOpacity 
+              style={styles.emptyStateButton}
+              onPress={() => (navigation as any).navigate('Campaigns')}
+            >
+              <Text style={styles.emptyStateButtonText}>Browse Campaigns</Text>
+              <Icon name="arrow-forward" size={16} color={Colors.white} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* Quick Actions Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        <View style={styles.quickActionsGrid}>
+          <TouchableOpacity 
+            style={styles.quickActionCard}
+            onPress={() => (navigation as any).navigate('Campaigns')}
+          >
+            <View style={[styles.quickActionIcon, { backgroundColor: '#EEF2FF' }]}>
+              <Icon name="explore" size={24} color="#6366F1" />
+            </View>
+            <Text style={styles.quickActionLabel}>Browse Campaigns</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.quickActionCard}
+            onPress={() => (navigation as any).navigate('Profile')}
+          >
+            <View style={[styles.quickActionIcon, { backgroundColor: '#FCE7F3' }]}>
+              <Icon name="person" size={24} color="#DB2777" />
+            </View>
+            <Text style={styles.quickActionLabel}>Edit Profile</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.quickActionCard}
+            onPress={() => (navigation as any).navigate('Campaigns', { screen: 'active' })}
+          >
+            <View style={[styles.quickActionIcon, { backgroundColor: '#D1FAE5' }]}>
+              <Icon name="handshake" size={24} color="#059669" />
+            </View>
+            <Text style={styles.quickActionLabel}>Active Projects</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.quickActionCard}
+            onPress={() => {
+              // TODO: Navigate to earnings/payments
+              showToast('Coming soon!', 'info');
+            }}
+          >
+            <View style={[styles.quickActionIcon, { backgroundColor: '#FEF3C7' }]}>
+              <Icon name="account-balance-wallet" size={24} color="#D97706" />
+            </View>
+            <Text style={styles.quickActionLabel}>Payments</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Tips & Resources Section */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <View>
+            <Text style={styles.sectionTitle}>Creator Tips</Text>
+            <Text style={styles.sectionSubtitle}>Improve your success rate</Text>
+          </View>
+        </View>
+        <View style={styles.tipsContainer}>
+          <View style={styles.tipCard}>
+            <View style={styles.tipIconContainer}>
+              <Icon name="lightbulb" size={20} color="#F59E0B" />
+            </View>
+            <View style={styles.tipContent}>
+              <Text style={styles.tipTitle}>Complete Your Profile</Text>
+              <Text style={styles.tipDescription}>
+                Brands are 3x more likely to approve complete profiles with portfolio links.
+              </Text>
+            </View>
+          </View>
+          
+          <View style={styles.tipCard}>
+            <View style={styles.tipIconContainer}>
+              <Icon name="speed" size={20} color="#10B981" />
+            </View>
+            <View style={styles.tipContent}>
+              <Text style={styles.tipTitle}>Apply Early</Text>
+              <Text style={styles.tipDescription}>
+                Applications submitted within 24 hours have higher approval rates.
+              </Text>
+            </View>
+          </View>
+          
+          <View style={styles.tipCard}>
+            <View style={styles.tipIconContainer}>
+              <Icon name="star" size={20} color="#8B5CF6" />
+            </View>
+            <View style={styles.tipContent}>
+              <Text style={styles.tipTitle}>Showcase Quality Work</Text>
+              <Text style={styles.tipDescription}>
+                Add your best content samples to stand out from other creators.
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
       <View style={{ height: 32 }} />
 
       {/* Toast Notification */}
@@ -760,6 +882,95 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     textAlign: 'center',
     marginTop: Spacing.xs,
+    lineHeight: 18,
+  },
+  emptyStateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.primary,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderRadius: 4,
+    marginTop: Spacing.lg,
+    gap: Spacing.xs,
+  },
+  emptyStateButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.white,
+  },
+  quickActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  quickActionCard: {
+    flex: 1,
+    minWidth: '47%',
+    backgroundColor: Colors.white,
+    padding: Spacing.lg,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  quickActionIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+  },
+  quickActionLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#111827',
+    textAlign: 'center',
+  },
+  tipsContainer: {
+    gap: Spacing.sm,
+  },
+  tipCard: {
+    flexDirection: 'row',
+    backgroundColor: Colors.white,
+    padding: Spacing.lg,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  tipIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 4,
+    backgroundColor: '#FEF3C7',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Spacing.md,
+  },
+  tipContent: {
+    flex: 1,
+  },
+  tipTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  tipDescription: {
+    fontSize: 13,
+    color: '#6B7280',
     lineHeight: 18,
   },
 });

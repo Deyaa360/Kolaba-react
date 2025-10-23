@@ -13,3 +13,9 @@ export { default as ToastNotification } from './ToastNotification';
 export { default as EmptyState } from './EmptyState';
 export { default as BadgeCounter } from './BadgeCounter';
 export { default as FloatingActionButton } from './FloatingActionButton';
+
+// New Reusable Components
+export { default as InfoCard } from './InfoCard';
+export { default as StatCard } from './StatCard';
+export { default as FeatureCard } from './FeatureCard';
+export { default as QuickActionButton } from './QuickActionButton';
