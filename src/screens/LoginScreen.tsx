@@ -1,47 +1,93 @@
-﻿import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  Alert,
   KeyboardAvoidingView,
   ScrollView,
   Platform,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Colors, Typography, Spacing, BorderRadius } from '../theme';
-import supabaseService from '../services/supabase';
-import { AnimatedButton, Toast } from '../components';
+import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
+import { validateEmail, validatePassword } from '../utils/validation';
+import analytics from '../services/analytics';
+import { AnimatedButton } from '../components';
 
 interface LoginScreenProps {
   navigation: any;
 }
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
+  const { signIn } = useAuth();
+  const toast = useToast();
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [toast, setToast] = useState({ visible: false, message: '', type: 'info' as any });
+  
+  // Validation errors
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [touched, setTouched] = useState({ email: false, password: false });
+
+  // Track screen view
+  useEffect(() => {
+    analytics.logScreenView('Login');
+  }, []);
+
+  // Validate email on blur only (more professional)
+  useEffect(() => {
+    if (touched.email) {
+      if (!email) {
+        setEmailError('');
+      } else {
+        const result = validateEmail(email);
+        setEmailError(result.isValid ? '' : result.error || '');
+      }
+    }
+  }, [touched.email, email]);
+
+  // Validate password on blur only
+  useEffect(() => {
+    if (touched.password) {
+      if (!password) {
+        setPasswordError('');
+      } else {
+        const result = validatePassword(password);
+        setPasswordError(result.isValid ? '' : result.error || '');
+      }
+    }
+  }, [touched.password, password]);
+
+  const isFormValid = () => {
+    const emailValid = validateEmail(email).isValid;
+    const passwordValid = validatePassword(password).isValid;
+    return emailValid && passwordValid;
+  };
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      setToast({ visible: true, message: 'Please fill in all fields', type: 'warning' });
+    // Mark all fields as touched
+    setTouched({ email: true, password: true });
+
+    // Validate before submitting
+    if (!isFormValid()) {
+      toast.showWarning('Please fix the errors before continuing');
       return;
     }
 
     setLoading(true);
     try {
-      await supabaseService.signIn(email, password);
-      setToast({ visible: true, message: 'Welcome back!', type: 'success' });
+      await signIn(email, password);
+      analytics.logLogin('email');
+      toast.showSuccess('Welcome back!');
     } catch (error: any) {
-      setToast({ 
-        visible: true, 
-        message: error.message || 'Invalid credentials', 
-        type: 'error' 
-      });
+      analytics.logError(error.message, 'Login');
+      toast.showError(error.message || 'Invalid credentials');
     } finally {
       setLoading(false);
     }
@@ -57,9 +103,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Hero Section - Improved */}
+        {/* Hero Section - Enhanced */}
         <View style={styles.header}>
           <View style={styles.logoContainer}>
+            <View style={styles.logoGlow} />
             <Icon name="campaign" size={56} color={Colors.primary} />
           </View>
           <Text style={styles.logo}>Kolaba</Text>
@@ -71,8 +118,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         <View style={styles.form}>
           {/* Email Input */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email Address</Text>
-            <View style={styles.inputWrapper}>
+            <Text style={styles.label}>📧 Email Address</Text>
+            <View style={[styles.inputWrapper, emailError && touched.email && styles.inputWrapperError]}>
               <Icon name="email" size={20} color={Colors.textSecondary} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
@@ -80,6 +127,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 placeholderTextColor={Colors.textTertiary}
                 value={email}
                 onChangeText={setEmail}
+                onBlur={() => setTouched({ ...touched, email: true })}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -89,12 +137,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 accessibilityHint="Enter your email address"
               />
             </View>
+            {emailError && touched.email && (
+              <Text style={styles.errorText}>{emailError}</Text>
+            )}
           </View>
 
           {/* Password Input */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Password</Text>
-            <View style={styles.inputWrapper}>
+            <Text style={styles.label}>🔒 Password</Text>
+            <View style={[styles.inputWrapper, passwordError && touched.password && styles.inputWrapperError]}>
               <Icon name="lock" size={20} color={Colors.textSecondary} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
@@ -102,6 +153,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 placeholderTextColor={Colors.textTertiary}
                 value={password}
                 onChangeText={setPassword}
+                onBlur={() => setTouched({ ...touched, password: true })}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
                 editable={!loading}
@@ -123,6 +175,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 />
               </TouchableOpacity>
             </View>
+            {passwordError && touched.password && (
+              <Text style={styles.errorText}>{passwordError}</Text>
+            )}
           </View>
 
           {/* Forgot Password */}
@@ -142,7 +197,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             variant="primary"
             size="large"
             loading={loading}
-            disabled={loading}
+            disabled={loading || !isFormValid()}
             fullWidth={true}
             style={styles.loginButton}
           />
@@ -166,14 +221,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           />
         </View>
       </ScrollView>
-      
-      {/* Toast Notification */}
-      <Toast
-        visible={toast.visible}
-        message={toast.message}
-        type={toast.type}
-        onHide={() => setToast({ ...toast, visible: false })}
-      />
     </KeyboardAvoidingView>
   );
 };
@@ -184,64 +231,90 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing['2xl'],
+    paddingHorizontal: 20,
+    paddingTop: 40,
+    paddingBottom: 32,
   },
   header: {
     alignItems: 'center',
-    marginBottom: Spacing['3xl'],
+    marginBottom: 32,
   },
   logoContainer: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     backgroundColor: Colors.white,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
+    marginBottom: 16,
+    borderWidth: 3,
+    borderColor: '#E0F2F1',
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  logoGlow: {
+    position: 'absolute',
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: Colors.primary,
+    opacity: 0.1,
   },
   logo: {
-    ...Typography.title1,
-    color: Colors.black,
-    marginBottom: Spacing.xxs,
+    fontSize: 32,
+    fontWeight: '700',
+    color: Colors.text,
+    marginBottom: 4,
+    letterSpacing: -0.5,
   },
   subtitle: {
-    ...Typography.callout,
-    color: Colors.textSecondary,
-    marginBottom: Spacing.xs,
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.primary,
+    marginBottom: 8,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
   },
   tagline: {
-    ...Typography.subheadline,
-    color: Colors.textTertiary,
+    fontSize: 15,
+    color: Colors.textSecondary,
     textAlign: 'center',
+    fontWeight: '400',
   },
   form: {
     width: '100%',
   },
   inputGroup: {
-    marginBottom: Spacing.lg,
+    marginBottom: 16,
   },
   label: {
-    ...Typography.footnote,
-    fontWeight: Typography.fontWeight.semibold,
+    fontSize: 13,
+    fontWeight: '600',
     color: Colors.text,
-    marginBottom: Spacing.xs,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    marginBottom: 10,
+    letterSpacing: 0.3,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.white,
     borderRadius: BorderRadius.lg,
-    borderWidth: 1.5,
+    borderWidth: 2,
     borderColor: Colors.border,
-    paddingHorizontal: Spacing.md,
-    minHeight: 50,
+    paddingHorizontal: 16,
+    minHeight: 52,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  inputWrapperError: {
+    borderColor: '#FCA5A5',
+    backgroundColor: '#FEF2F2',
   },
   inputIcon: {
     marginRight: Spacing.sm,
@@ -250,6 +323,14 @@ const styles = StyleSheet.create({
     flex: 1,
     ...Typography.body,
     color: Colors.text,
+    paddingVertical: Spacing.sm,
+  },
+  errorText: {
+    ...Typography.caption1,
+    color: '#EF4444',
+    marginTop: Spacing.xs,
+    marginLeft: Spacing.xxs,
+    fontWeight: Typography.fontWeight.medium,
   },
   eyeIcon: {
     padding: Spacing.sm,
@@ -257,21 +338,22 @@ const styles = StyleSheet.create({
   },
   forgotPassword: {
     alignSelf: 'flex-end',
-    marginBottom: Spacing.xl,
-    padding: Spacing.xs,
+    marginBottom: 20,
+    marginTop: 4,
+    padding: 8,
   },
   forgotPasswordText: {
-    ...Typography.footnote,
+    fontSize: 13,
     color: Colors.primary,
-    fontWeight: Typography.fontWeight.semibold,
+    fontWeight: '600',
   },
   loginButton: {
-    marginBottom: Spacing.lg,
+    marginBottom: 16,
   },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: Spacing.xl,
+    marginVertical: 20,
   },
   dividerLine: {
     flex: 1,
@@ -279,10 +361,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.border,
   },
   dividerText: {
-    ...Typography.footnote,
-    marginHorizontal: Spacing.md,
+    fontSize: 13,
+    marginHorizontal: 16,
     color: Colors.textSecondary,
-    fontWeight: Typography.fontWeight.medium,
+    fontWeight: '500',
   },
 });
 

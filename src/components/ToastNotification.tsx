@@ -88,10 +88,12 @@ const ToastNotification: React.FC<ToastNotificationProps> = ({
 
   const toastStyle = getToastStyle();
 
-  if (!visible) return null;
-
+  // Always render but hide with pointerEvents to avoid property access errors
   return (
-    <Animated.View style={[styles.container, animatedStyle]}>
+    <Animated.View 
+      style={[styles.container, animatedStyle]}
+      pointerEvents={visible ? 'auto' : 'none'}
+    >
       <TouchableOpacity
         style={[styles.toast, { backgroundColor: toastStyle.backgroundColor }]}
         onPress={hideToast}

@@ -12,7 +12,8 @@ import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Colors, Typography, Spacing, BorderRadius } from '../theme';
 import supabaseService from '../services/supabase';
-import { SkeletonProfileCard, AnimatedCard, AnimatedButton, ToastNotification } from '../components';
+import { SkeletonProfileCard, AnimatedCard, AnimatedButton } from '../components';
+import { useToast } from '../contexts/ToastContext';
 
 interface UserProfile {
   id: string;
@@ -29,19 +30,11 @@ interface CreatorProfile {
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
+  const toast = useToast();
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [creatorProfile, setCreatorProfile] = useState<CreatorProfile | null>(null);
   const [stats, setStats] = useState({ applications: 0, completed: 0, earnings: 0 });
-  const [toastVisible, setToastVisible] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastType, setToastType] = useState<'success'|'error'|'info'|'warning'>('info');
-
-  const showToast = (message: string, type: 'success'|'error'|'info'|'warning') => {
-    setToastMessage(message);
-    setToastType(type);
-    setToastVisible(true);
-  };
 
   useEffect(() => {
     loadProfile();
@@ -82,7 +75,7 @@ const ProfileScreen = () => {
       }
     } catch (error) {
       console.error('Error loading profile:', error);
-      showToast('Failed to load profile data', 'error');
+      toast.showError('Failed to load profile data');
       // Set defaults on error
       setStats({ applications: 0, completed: 0, earnings: 0 });
     } finally {
@@ -92,12 +85,12 @@ const ProfileScreen = () => {
 
   const handleLogout = async () => {
     try {
-      showToast('Logging out...', 'info');
+      toast.showInfo('Logging out...');
       await supabaseService.signOut();
-      showToast('Successfully logged out', 'success');
+      toast.showSuccess('Successfully logged out');
     } catch (error) {
       console.error('Error logging out:', error);
-      showToast('Failed to logout. Please try again.', 'error');
+      toast.showError('Failed to logout. Please try again.');
     }
   };
 
@@ -240,13 +233,6 @@ const ProfileScreen = () => {
         />
       </View>
 
-      {/* Toast Notification */}
-      <ToastNotification
-        visible={toastVisible}
-        message={toastMessage}
-        type={toastType}
-        onHide={() => setToastVisible(false)}
-      />
     </ScrollView>
   );
 };
@@ -254,58 +240,66 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,  // Light gray
+    backgroundColor: '#F9FAFB',
   },
   contentContainer: {
-    paddingBottom: Spacing.xl * 2,
+    paddingBottom: 40,
   },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: 12,
-    paddingBottom: Spacing.md,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 16,
     backgroundColor: Colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
   screenTitle: {
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: '700',
     color: '#111827',
+    letterSpacing: -0.3,
   },
   settingsButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: '#EEF2FF',
     justifyContent: 'center',
     alignItems: 'center',
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: Colors.background,  // Light gray
+    backgroundColor: '#F9FAFB',
     justifyContent: 'center',
     alignItems: 'center',
   },
   header: {
     alignItems: 'center',
-    padding: Spacing.xl,
-    paddingTop: 40,
-    paddingBottom: Spacing.xl,
+    paddingHorizontal: 20,
+    paddingTop: 32,
+    paddingBottom: 24,
     backgroundColor: Colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   avatarContainer: {
-    marginBottom: Spacing.md,
+    marginBottom: 16,
   },
   avatar: {
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: Colors.primary,  // Turquoise
+    backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#E0F2F1',
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
   },
   avatarText: {
     fontSize: 40,
@@ -326,18 +320,23 @@ const styles = StyleSheet.create({
   },
   statsGrid: {
     flexDirection: 'row',
-    gap: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingTop: 20,
   },
   statCard: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    padding: Spacing.lg,
-    borderRadius: 16,
+    padding: 20,
+    borderRadius: 12,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   statIconBg: {
     width: 48,

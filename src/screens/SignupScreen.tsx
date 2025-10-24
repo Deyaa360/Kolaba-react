@@ -14,13 +14,15 @@ import {
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Colors, Typography, Spacing, BorderRadius } from '../theme';
 import supabaseService from '../services/supabase';
-import { ToastNotification } from '../components';
+import { AnimatedButton } from '../components';
+import { useToast } from '../contexts/ToastContext';
 
 interface SignupScreenProps {
   navigation: any;
 }
 
 const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
+  const toast = useToast();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,27 +30,18 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [toastVisible, setToastVisible] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastType, setToastType] = useState<'success'|'error'|'info'|'warning'>('info');
-
-  const showToast = (message: string, type: 'success'|'error'|'info'|'warning') => {
-    setToastMessage(message);
-    setToastType(type);
-    setToastVisible(true);
-  };
 
   const handleSignup = async () => {
     if (!name || !email || !password || !confirmPassword) {
-      showToast('Please fill in all fields', 'warning');
+      toast.showWarning('Please fill in all fields');
       return;
     }
     if (password !== confirmPassword) {
-      showToast('Passwords do not match', 'error');
+      toast.showError('Passwords do not match');
       return;
     }
     if (password.length < 6) {
-      showToast('Password must be at least 6 characters', 'warning');
+      toast.showWarning('Password must be at least 6 characters');
       return;
     }
 
@@ -60,10 +53,10 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
       await supabaseService.signUp(email, password, {
         data: { first_name: firstName, last_name: lastName }
       });
-      showToast('Account created! Please check your email to confirm.', 'success');
+      toast.showSuccess('Account created! Please check your email to confirm.');
       setTimeout(() => navigation.navigate('Login'), 2000);
     } catch (error: any) {
-      showToast(error.message || 'Could not create account', 'error');
+      toast.showError(error.message || 'Could not create account');
     } finally {
       setLoading(false);
     }
@@ -79,9 +72,11 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
         {/* Hero Section */}
         <View style={styles.header}>
           <View style={styles.iconContainer}>
+            <View style={styles.iconGlow} />
             <Icon name="person-add" size={48} color={Colors.primary} />
           </View>
           <Text style={styles.logo}>Join Kolaba</Text>
+          <Text style={styles.subtitle}>Creator Platform</Text>
           <Text style={styles.tagline}>Create content, work with brands, earn money</Text>
         </View>
 
@@ -89,7 +84,7 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
         <View style={styles.form}>
           {/* Name Input */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Full Name</Text>
+            <Text style={styles.label}>👤 Full Name</Text>
             <View style={styles.inputWrapper}>
               <Icon
                 name="person"
@@ -111,7 +106,7 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
 
           {/* Email Input */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email Address</Text>
+            <Text style={styles.label}>📧 Email Address</Text>
             <View style={styles.inputWrapper}>
               <Icon
                 name="email"
@@ -135,7 +130,7 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
 
           {/* Password Input */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Password</Text>
+            <Text style={styles.label}>🔒 Password</Text>
             <View style={styles.inputWrapper}>
               <Icon
                 name="lock"
@@ -167,7 +162,7 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
 
           {/* Confirm Password Input */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Confirm Password</Text>
+            <Text style={styles.label}>✔️ Confirm Password</Text>
             <View style={styles.inputWrapper}>
               <Icon
                 name="lock-outline"
@@ -198,19 +193,17 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
           </View>
 
           {/* Sign Up Button */}
-          <TouchableOpacity
-            style={[styles.signupButton, loading && styles.signupButtonDisabled]}
+          <AnimatedButton
+            title="Create Account"
             onPress={handleSignup}
-            disabled={loading}>
-            {loading ? (
-              <ActivityIndicator color={Colors.white} />
-            ) : (
-              <View style={styles.buttonContent}>
-                <Text style={styles.signupButtonText}>Create Account</Text>
-                <Icon name="arrow-forward" size={20} color={Colors.white} />
-              </View>
-            )}
-          </TouchableOpacity>
+            variant="primary"
+            size="large"
+            loading={loading}
+            disabled={loading}
+            fullWidth={true}
+            icon={<Icon name="arrow-forward" size={20} color={Colors.white} />}
+            style={{ marginTop: 8 }}
+          />
 
           {/* Terms & Privacy */}
           <Text style={styles.termsText}>
@@ -230,14 +223,6 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
           </View>
         </View>
       </ScrollView>
-
-      {/* Toast Notification */}
-      <ToastNotification
-        visible={toastVisible}
-        message={toastMessage}
-        type={toastType}
-        onHide={() => setToastVisible(false)}
-      />
     </KeyboardAvoidingView>
   );
 };
@@ -250,61 +235,93 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.xl,
+    paddingHorizontal: 20,
+    paddingVertical: 32,
   },
   header: {
     alignItems: 'center',
-    marginBottom: Spacing['2xl'],
+    marginBottom: 40,
   },
   iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: Colors.primary + '15',
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: Colors.white,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.lg,
+    marginBottom: 20,
+    borderWidth: 3,
+    borderColor: '#E0F2F1',
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  iconGlow: {
+    position: 'absolute',
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: Colors.primary,
+    opacity: 0.1,
   },
   logo: {
-    fontSize: Typography.fontSize['3xl'],
-    fontWeight: Typography.fontWeight.bold,
+    fontSize: 32,
+    fontWeight: '700',
+    color: Colors.text,
+    marginBottom: 4,
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    fontSize: 15,
+    fontWeight: '600',
     color: Colors.primary,
-    marginBottom: Spacing.xs,
+    marginBottom: 8,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
   },
   tagline: {
-    fontSize: Typography.fontSize.base,
+    fontSize: 14,
     color: Colors.textSecondary,
     textAlign: 'center',
+    fontWeight: '400',
   },
   form: {
     width: '100%',
   },
   inputGroup: {
-    marginBottom: Spacing.lg,
+    marginBottom: 18,
   },
   label: {
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.semibold,
+    fontSize: 13,
+    fontWeight: '600',
     color: Colors.text,
-    marginBottom: Spacing.xs,
+    marginBottom: 10,
+    letterSpacing: 0.3,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.white,
     borderRadius: BorderRadius.lg,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: Colors.border,
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: 16,
+    minHeight: 56,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   inputIcon: {
     marginRight: Spacing.sm,
   },
   input: {
     flex: 1,
-    paddingVertical: Spacing.md,
-    fontSize: Typography.fontSize.base,
+    paddingVertical: 12,
+    fontSize: 16,
     color: Colors.text,
   },
   eyeIcon: {
@@ -331,29 +348,30 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   termsText: {
-    fontSize: Typography.fontSize.xs,
-    color: Colors.textSecondary,
+    fontSize: 12,
+    color: Colors.textTertiary,
     textAlign: 'center',
-    marginTop: Spacing.lg,
+    marginTop: 16,
     lineHeight: 18,
   },
   termsLink: {
     color: Colors.primary,
-    fontWeight: Typography.fontWeight.medium,
+    fontWeight: '600',
   },
   loginContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: Spacing.lg,
+    alignItems: 'center',
+    marginTop: 24,
   },
   loginText: {
+    fontSize: 14,
     color: Colors.textSecondary,
-    fontSize: Typography.fontSize.base,
   },
   loginLink: {
+    fontSize: 14,
     color: Colors.primary,
-    fontSize: Typography.fontSize.base,
-    fontWeight: Typography.fontWeight.semibold,
+    fontWeight: '700',
   },
 });
 

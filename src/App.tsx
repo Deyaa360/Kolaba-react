@@ -1,33 +1,25 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import AppNavigator from './navigation/AppNavigator';
-import supabaseService from './services/supabase';
+import { ErrorBoundary } from './components';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
+import analytics from './services/analytics';
 import { Colors } from './theme';
 
-const App = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
+/**
+ * App Content Component
+ * Separated to access AuthContext
+ */
+const AppContent = () => {
+  const { isAuthenticated, isLoading } = useAuth();
 
+  // Initialize analytics
   useEffect(() => {
-    checkAuth();
-    const { data: authListener } = supabaseService.client.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(!!session);
-    });
-    return () => { authListener?.subscription.unsubscribe(); };
+    analytics.initialize();
   }, []);
 
-  const checkAuth = async () => {
-    try {
-      const session = await supabaseService.getSession();
-      setIsAuthenticated(!!session);
-    } catch (error) {
-      console.error('Auth check error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background }}>
         <ActivityIndicator size="large" color={Colors.primary} />
@@ -36,6 +28,22 @@ const App = () => {
   }
 
   return <AppNavigator isAuthenticated={isAuthenticated} />;
+};
+
+/**
+ * Root App Component
+ * Wraps app with providers and error boundary
+ */
+const App = () => {
+  return (
+    <ErrorBoundary>
+      <AuthProvider>
+        <ToastProvider>
+          <AppContent />
+        </ToastProvider>
+      </AuthProvider>
+    </ErrorBoundary>
+  );
 };
 
 export default App;

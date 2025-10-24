@@ -13,6 +13,9 @@ import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import FastImage from 'react-native-fast-image';
 import supabaseService from '../services/supabase';
+import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
+import analytics from '../services/analytics';
 import { Colors, Typography, Spacing, BorderRadius } from '../theme';
 import { 
   AnimatedCard, 
@@ -20,20 +23,12 @@ import {
   SkeletonStatCard as SkeletonStatCardNew, 
   SkeletonListItem as SkeletonListItemNew, 
   EmptyState, 
-  ToastNotification, 
   ActionCard,
   InfoCard,
   StatCard,
   QuickActionButton,
   FeatureCard
 } from '../components';
-
-interface Stats {
-  totalApplications: number;
-  approvedApplications: number;
-  totalEarnings: number;
-  completedCampaigns: number;
-}
 
 interface Campaign {
   id: string;
@@ -59,26 +54,13 @@ interface Application {
 
 const DashboardScreen: React.FC = () => {
   const navigation = useNavigation();
+  const { user, stats: userStats, refreshStats } = useAuth();
+  const toast = useToast();
+  
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [stats, setStats] = useState<Stats>({
-    totalApplications: 0,
-    approvedApplications: 0,
-    totalEarnings: 0,
-    completedCampaigns: 0,
-  });
   const [recentCampaigns, setRecentCampaigns] = useState<Campaign[]>([]);
   const [recentApplications, setRecentApplications] = useState<Application[]>([]);
-  const [userName, setUserName] = useState('Creator');
-  const [toastVisible, setToastVisible] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastType, setToastType] = useState<'success'|'error'|'info'|'warning'>('info');
-
-  const showToast = (message: string, type: 'success'|'error'|'info'|'warning') => {
-    setToastMessage(message);
-    setToastType(type);
-    setToastVisible(true);
-  };
 
   // Helper function for dynamic greeting
   const getGreeting = () => {
@@ -89,10 +71,15 @@ const DashboardScreen: React.FC = () => {
   };
 
   const getFirstName = () => {
-    return userName.split(' ')[0];
+    const displayName = user?.user_metadata?.display_name || 
+                        user?.user_metadata?.full_name || 
+                        user?.email?.split('@')[0] || 
+                        'Creator';
+    return displayName.split(' ')[0];
   };
 
   useEffect(() => {
+    analytics.logScreenView('Dashboard');
     loadDashboardData();
   }, []);
 
@@ -100,24 +87,8 @@ const DashboardScreen: React.FC = () => {
     try {
       setLoading(true);
 
-      // Get user info
-      const user = await supabaseService.getCurrentUser();
-      if (user) {
-        const displayName = user.user_metadata?.display_name || 
-                           user.user_metadata?.full_name || 
-                           user.email?.split('@')[0] || 
-                           'Creator';
-        setUserName(displayName);
-      }
-
-      // Load stats
-      const userStats = await supabaseService.getUserStats();
-      setStats({
-        totalApplications: userStats.totalApplications || 0,
-        approvedApplications: userStats.approvedApplications || 0,
-        totalEarnings: userStats.totalEarnings || 0,
-        completedCampaigns: userStats.completedCampaigns || 0,
-      });
+      // Refresh stats from context
+      await refreshStats();
 
       // Load recent campaigns (top 3)
       const campaigns = await supabaseService.getCampaigns(3, 'active');
@@ -129,13 +100,8 @@ const DashboardScreen: React.FC = () => {
 
     } catch (error) {
       console.error('Error loading dashboard:', error);
-      showToast('Failed to load dashboard data', 'error');
-      setStats({
-        totalApplications: 0,
-        approvedApplications: 0,
-        totalEarnings: 0,
-        completedCampaigns: 0,
-      });
+      analytics.logError(String(error), 'Dashboard');
+      toast.showError('Failed to load dashboard data');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -301,14 +267,14 @@ const DashboardScreen: React.FC = () => {
             icon="assignment"
             iconColor="#6366F1"
             iconBackground="#EEF2FF"
-            value={stats.totalApplications}
+            value={userStats?.totalApplications || 0}
             label="Total Applied"
           />
           <StatCard
             icon="check-circle"
             iconColor="#059669"
             iconBackground="#D1FAE5"
-            value={stats.approvedApplications}
+            value={userStats?.approvedApplications || 0}
             label="Approved"
           />
         </View>
@@ -317,14 +283,14 @@ const DashboardScreen: React.FC = () => {
             icon="emoji-events"
             iconColor="#D97706"
             iconBackground="#FEF3C7"
-            value={stats.completedCampaigns}
+            value={userStats?.completedCampaigns || 0}
             label="Completed"
           />
           <StatCard
             icon="payments"
             iconColor="#059669"
             iconBackground="#ECFDF5"
-            value={`$${stats.totalEarnings.toFixed(0)}`}
+            value={`$${(userStats?.totalEarnings || 0).toFixed(0)}`}
             label="Earnings"
           />
         </View>
@@ -429,7 +395,7 @@ const DashboardScreen: React.FC = () => {
             label="My Projects"
             iconColor="#059669"
             iconBackground="#D1FAE5"
-            badge={stats.approvedApplications}
+            badge={userStats?.approvedApplications || 0}
             onPress={() => (navigation as any).navigate('Orders')}
           />
           
@@ -525,14 +491,6 @@ const DashboardScreen: React.FC = () => {
       </View>
 
       <View style={{ height: 32 }} />
-
-      {/* Toast Notification */}
-      <ToastNotification
-        visible={toastVisible}
-        message={toastMessage}
-        type={toastType}
-        onHide={() => setToastVisible(false)}
-      />
     </ScrollView>
   );
 };
@@ -540,13 +498,13 @@ const DashboardScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,  // Light gray
+    backgroundColor: '#F9FAFB',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background,  // Light gray
+    backgroundColor: '#F9FAFB',
   },
   loadingText: {
     marginTop: Spacing.md,
@@ -566,21 +524,27 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   greeting: {
-    ...Typography.title2,
-    color: Colors.text,
+    fontSize: 26,
+    fontWeight: '700',
+    color: '#111827',
+    letterSpacing: -0.5,
   },
   headerSubtitle: {
-    ...Typography.subheadline,
-    color: Colors.textSecondary,
+    fontSize: 15,
+    color: '#6B7280',
+    fontWeight: '400',
+    marginTop: 2,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.xl * 1.5,
-    paddingBottom: Spacing.xl,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 20,
     backgroundColor: Colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
   welcomeText: {
     fontSize: 15,
@@ -595,35 +559,35 @@ const styles = StyleSheet.create({
     letterSpacing: -0.8,
   },
   statsContainer: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.lg,
-    backgroundColor: Colors.background,
-    gap: Spacing.sm,
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+    backgroundColor: '#F9FAFB',
+    gap: 12,
   },
   statsRow: {
     flexDirection: 'row',
-    gap: Spacing.sm,
+    gap: 12,
   },
   statCard: {
     flex: 1,
     backgroundColor: Colors.white,
-    padding: Spacing.lg,
-    borderRadius: 4,
+    padding: 16,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E5E7EB',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   statIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 4,
+    width: 44,
+    height: 44,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.sm,
+    marginBottom: 12,
   },
   statValue: {
     fontSize: 24,
@@ -638,20 +602,22 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   spotlightSection: {
-    marginTop: Spacing.lg,
+    marginTop: 24,
+    marginBottom: 8,
   },
   spotlightHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    paddingHorizontal: Spacing.xl,
-    marginBottom: Spacing.md,
+    paddingHorizontal: 20,
+    marginBottom: 16,
   },
   spotlightTitle: {
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: '700',
     color: '#111827',
-    marginBottom: 4,
+    marginBottom: 6,
+    letterSpacing: -0.3,
   },
   spotlightSubtitle: {
     fontSize: 13,
@@ -659,11 +625,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   spotlightScroll: {
-    paddingHorizontal: Spacing.xl,
-    gap: Spacing.md,
+    paddingHorizontal: 20,
+    gap: 12,
   },
   featureCardWrapper: {
-    width: 240,
+    width: 260,
   },
   actionCardWrapper: {
     width: 240,
@@ -730,20 +696,21 @@ const styles = StyleSheet.create({
     color: '#6366F1',
   },
   section: {
-    marginTop: Spacing.xl,
-    paddingHorizontal: Spacing.lg,
+    marginTop: 32,
+    paddingHorizontal: 20,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: Spacing.md,
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: '700',
     color: '#111827',
-    marginBottom: 4,
+    marginBottom: 6,
+    letterSpacing: -0.3,
   },
   sectionSubtitle: {
     fontSize: 13,
@@ -760,29 +727,29 @@ const styles = StyleSheet.create({
   },
   campaignCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 4,
+    borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    marginBottom: Spacing.sm,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   campaignCardContent: {
-    padding: Spacing.md,
+    padding: 16,
   },
   campaignCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing.sm,
+    marginBottom: 12,
   },
   brandLogoWrapper: {
-    width: 48,
-    height: 48,
-    borderRadius: 4,
+    width: 52,
+    height: 52,
+    borderRadius: 10,
     overflow: 'hidden',
     backgroundColor: '#F9FAFB',
     borderWidth: 1.5,
@@ -800,14 +767,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#EEF2FF',
   },
   campaignTextContent: {
-    marginLeft: Spacing.md,
+    marginLeft: 14,
     flex: 1,
   },
   campaignTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
     color: '#111827',
-    marginBottom: 2,
+    marginBottom: 3,
+    letterSpacing: -0.2,
   },
   brandName: {
     fontSize: 13,
@@ -823,38 +791,39 @@ const styles = StyleSheet.create({
   },
   applicationCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 4,
-    padding: Spacing.md,
+    borderRadius: 12,
+    padding: 16,
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    marginBottom: Spacing.sm,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   applicationHeader: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   brandLogoContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 4,
+    width: 48,
+    height: 48,
+    borderRadius: 10,
     backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
   },
   applicationInfo: {
-    marginLeft: Spacing.md,
+    marginLeft: 14,
     flex: 1,
   },
   applicationTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
     color: '#111827',
+    letterSpacing: -0.2,
   },
   applicationBrand: {
     fontSize: 13,
@@ -862,10 +831,10 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 4,
-    marginLeft: Spacing.sm,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    marginLeft: 12,
   },
   statusText: {
     fontSize: 11,
@@ -873,17 +842,23 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 4,
-    padding: Spacing.xl,
+    borderRadius: 12,
+    padding: 32,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
   },
   emptyStateText: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '600',
     color: '#111827',
-    marginTop: Spacing.md,
+    marginTop: 16,
+    letterSpacing: -0.2,
   },
   emptyStateSubtext: {
     fontSize: 13,
@@ -896,11 +871,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderRadius: 4,
-    marginTop: Spacing.lg,
-    gap: Spacing.xs,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 10,
+    marginTop: 20,
+    gap: 8,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
   emptyStateButtonText: {
     fontSize: 14,
@@ -910,8 +890,8 @@ const styles = StyleSheet.create({
   quickActionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Spacing.sm,
-    marginTop: Spacing.sm,
+    gap: 12,
+    marginTop: 12,
   },
   quickActionCard: {
     flex: 1,

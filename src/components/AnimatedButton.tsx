@@ -158,9 +158,15 @@ const styles = StyleSheet.create({
   // Primary variant
   button_primary: {
     backgroundColor: Colors.primary,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
   },
   button_primary_disabled: {
-    backgroundColor: Colors.buttonDisabled,
+    backgroundColor: '#D1D5DB', // Light gray
+    opacity: 0.6,
   },
   
   // Secondary variant
@@ -178,9 +184,10 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary,
   },
   button_outline_disabled: {
-    backgroundColor: 'transparent',
+    backgroundColor: '#F9FAFB',
     borderWidth: 1.5,
-    borderColor: Colors.borderLight,
+    borderColor: '#E5E7EB',
+    opacity: 0.7,
   },
   
   // Ghost variant
@@ -215,7 +222,7 @@ const styles = StyleSheet.create({
     color: Colors.white,
   },
   buttonText_primary_disabled: {
-    color: Colors.textDisabled,
+    color: '#9CA3AF', // Medium gray - more visible
   },
   
   // Secondary text

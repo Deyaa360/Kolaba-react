@@ -63,6 +63,7 @@ const CampaignsScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   
   // Animated tab indicator
   const tabIndicatorPosition = useSharedValue(0);
@@ -86,6 +87,15 @@ const CampaignsScreen: React.FC = () => {
   useEffect(() => {
     loadCampaignsData();
   }, []);
+
+  // Debounce search query to prevent lag
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300); // 300ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const loadCampaignsData = async () => {
     try {
@@ -420,8 +430,8 @@ const CampaignsScreen: React.FC = () => {
     );
   };
 
-  const filteredAvailableCampaigns = availableCampaigns.filter(campaign => {
-    const query = searchQuery.toLowerCase();
+  const filteredAvailableCampaigns = useMemo(() => availableCampaigns.filter(campaign => {
+    const query = debouncedSearchQuery.toLowerCase();
     
     // Apply search filter - search through title, description, brand name, and objective
     const matchesSearch = query === '' || 
@@ -439,27 +449,27 @@ const CampaignsScreen: React.FC = () => {
       selectedShipping.includes(campaign.product_shipping || '');
     
     return matchesSearch && matchesObjective && matchesShipping;
-  });
+  }), [availableCampaigns, debouncedSearchQuery, selectedObjectives, selectedShipping]);
 
-  const filteredApplications = myApplications.filter(app => {
+  const filteredApplications = useMemo(() => myApplications.filter(app => {
     const campaign = app.campaigns;
-    const query = searchQuery.toLowerCase();
+    const query = debouncedSearchQuery.toLowerCase();
     
     return query === '' ||
       (campaign?.title || '').toLowerCase().includes(query) ||
       (campaign?.description || '').toLowerCase().includes(query) ||
       (campaign?.brands?.brand_name || '').toLowerCase().includes(query);
-  });
+  }), [myApplications, debouncedSearchQuery]);
 
-  const filteredCollaborations = activeCollaborations.filter(collab => {
+  const filteredCollaborations = useMemo(() => activeCollaborations.filter(collab => {
     const campaign = collab.campaigns;
-    const query = searchQuery.toLowerCase();
+    const query = debouncedSearchQuery.toLowerCase();
     
     return query === '' ||
       (campaign?.title || '').toLowerCase().includes(query) ||
       (campaign?.description || '').toLowerCase().includes(query) ||
       (campaign?.brands?.brand_name || '').toLowerCase().includes(query);
-  });
+  }), [activeCollaborations, debouncedSearchQuery]);
 
   const renderTabContent = () => {
     if (loading) {
@@ -502,10 +512,11 @@ const CampaignsScreen: React.FC = () => {
                 description="Check back later for new opportunities"
               />
             }
-            maxToRenderPerBatch={5}
-            windowSize={10}
+            maxToRenderPerBatch={10}
+            windowSize={5}
             removeClippedSubviews={true}
-            initialNumToRender={5}
+            initialNumToRender={6}
+            updateCellsBatchingPeriod={50}
           />
         );
 
@@ -534,10 +545,11 @@ const CampaignsScreen: React.FC = () => {
                 description="Start applying to campaigns to track them here"
               />
             }
-            maxToRenderPerBatch={5}
-            windowSize={10}
+            maxToRenderPerBatch={10}
+            windowSize={5}
             removeClippedSubviews={true}
-            initialNumToRender={5}
+            initialNumToRender={6}
+            updateCellsBatchingPeriod={50}
           />
         );
 
@@ -566,10 +578,11 @@ const CampaignsScreen: React.FC = () => {
                 description="Your approved campaigns will appear here"
               />
             }
-            maxToRenderPerBatch={5}
-            windowSize={10}
+            maxToRenderPerBatch={10}
+            windowSize={5}
             removeClippedSubviews={true}
-            initialNumToRender={5}
+            initialNumToRender={6}
+            updateCellsBatchingPeriod={50}
           />
         );
     }
@@ -646,7 +659,7 @@ const CampaignsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: '#F9FAFB',
   },
   header: {
     position: 'absolute',
@@ -666,38 +679,38 @@ const styles = StyleSheet.create({
   searchFilterRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.md,
-    gap: Spacing.sm,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 12,
+    gap: 10,
   },
   searchContainer: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.gray100,
-    borderRadius: 4,
-    paddingHorizontal: Spacing.md,
-    height: 44,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    height: 48,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
   },
   searchInput: {
     flex: 1,
-    marginLeft: Spacing.sm,
-    fontSize: Typography.fontSize.base,
+    marginLeft: 10,
+    fontSize: 15,
     color: Colors.text,
   },
   filterButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 4,
-    backgroundColor: Colors.gray100,
+    width: 48,
+    height: 48,
+    borderRadius: 10,
+    backgroundColor: '#F9FAFB',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
-    borderWidth: 1,
-    borderColor: Colors.border,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
   },
   filterBadge: {
     position: 'absolute',
@@ -706,12 +719,14 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.primary,  // Turquoise indicator
+    backgroundColor: Colors.primary,
+    borderWidth: 2,
+    borderColor: Colors.white,
   },
   tabsContainer: {
     flexDirection: 'row',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.sm,
+    paddingHorizontal: 16,
+    paddingTop: 8,
   },
   tabButton: {
     flex: 1,
@@ -748,8 +763,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    padding: Spacing.lg,
-    paddingTop: 180, // Space for fixed header (tabs + search bar)
+    padding: 16,
+    paddingTop: 180,
   },
   loadingContainer: {
     flex: 1,
@@ -763,23 +778,23 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
   },
   
-  // Modern Campaign Card - Professional styling with sharp corners
+  // Modern Campaign Card
   campaignCard: {
     backgroundColor: Colors.white,
-    borderRadius: 4,
-    marginBottom: 18,
+    borderRadius: 12,
+    marginBottom: 16,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#E5E7EB',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
   },
   cardHeader: {
     backgroundColor: Colors.white,
-    paddingHorizontal: 18,
+    paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
@@ -791,7 +806,7 @@ const styles = StyleSheet.create({
   brandLogoWrapper: {
     width: 52,
     height: 52,
-    borderRadius: 4,
+    borderRadius: 10,
     overflow: 'hidden',
     backgroundColor: Colors.white,
     borderWidth: 1.5,

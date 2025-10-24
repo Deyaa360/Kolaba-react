@@ -24,6 +24,44 @@ import { Colors } from '../theme';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+/**
+ * Deep Linking Configuration
+ * Supports both app scheme (kolaba://) and web URLs (https://kolaba.app)
+ */
+const linking = {
+  prefixes: ['kolaba://', 'https://kolaba.app', 'https://*.kolaba.app'],
+  config: {
+    screens: {
+      Auth: {
+        screens: {
+          Login: 'login',
+          Signup: 'signup',
+        },
+      },
+      Main: {
+        screens: {
+          MainTabs: {
+            screens: {
+              Dashboard: 'home',
+              Campaigns: 'campaigns',
+              Orders: 'projects',
+              Messages: 'messages',
+              Settings: 'settings',
+            },
+          },
+          CampaignDetails: 'campaigns/:campaignId',
+          ProductDetails: 'products/:productId',
+          Profile: 'profile/:userId?',
+          Notifications: 'notifications',
+          Earnings: 'earnings',
+          ContentLibrary: 'library',
+          Reviews: 'reviews',
+        },
+      },
+    },
+  },
+};
+
 const AuthNavigator = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -240,7 +278,7 @@ const MainNavigator = () => {
 
 const AppNavigator: React.FC<{ isAuthenticated: boolean }> = ({ isAuthenticated }) => {
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={linking}>
       {!isAuthenticated ? <AuthNavigator /> : <MainNavigator />}
     </NavigationContainer>
   );
